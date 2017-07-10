@@ -1,6 +1,7 @@
 import assert from 'assert';
 import { Transform } from 'stream';
 import Engine from './engine';
+import Pipeline from './pipeline';
 
 
 const isStatement = name => typeof name === 'function';
@@ -16,6 +17,7 @@ const ezs = (name, opts) => {
 };
 
 ezs.plugins = {};
+
 ezs.use = (module) => {
     assert.equal(typeof module, 'object');
     Object.keys(module).forEach((moduleName) => {
@@ -27,6 +29,10 @@ ezs.use = (module) => {
     });
     return ezs;
 };
+
+
+ezs.pipeline = script => new Pipeline(script);
+
 
 ezs.tag = (tagname, func) => {
     assert.equal(typeof tagname, 'string');
