@@ -1,5 +1,6 @@
 import { Transform } from 'stream';
 import Feed from './feed';
+import Shell from './shell';
 
 export default class Engine extends Transform {
     constructor(func, params, tagname) {
@@ -13,7 +14,10 @@ export default class Engine extends Transform {
 
     _transform(chunk, encoding, done) {
         this.index += 1;
-        if (this.tagname && chunk.tagName && this.tagname === chunk.tagName()) {
+        if (chunk instanceof Error) {
+            this.push(chunk);
+            done();
+        } else if (this.tagname && chunk.tagName && this.tagname === chunk.tagName()) {
             this.execWith(chunk, done);
         } else if (this.tagname && chunk.tagName && this.tagname !== chunk.tagName()) {
             this.push(chunk);
@@ -32,9 +36,6 @@ export default class Engine extends Transform {
 
     execWith(chunk, done) {
         const push = (data) => {
-            if (data instanceof Error) {
-                return this.push(this.createError(data));
-            }
             if (this.tagname && chunk && chunk.tagName) {
                 data.tagName = chunk.tagName;
             }
@@ -45,26 +46,21 @@ export default class Engine extends Transform {
         this.scope.getIndex = () => this.index;
         this.scope.isLast = () => (chunk === null);
         this.scope.getParams = () => this.params;
-        this.scope.getParam = (name, defval) => (this.params[name] ? this.params[name] : defval);
 
         try {
+            this.scope.getParam = (name, defval) =>
+                (this.params[name] ? Shell(this.params[name], { ...this.scope, ...chunk }) : defval);
             this.func.call(this.scope, chunk, feed);
         } catch (e) {
-            // console.error(this.createError(e));
-            this.push(this.createError(e));
+            const err = this.createError(e);
+            this.push(err);
+            done();
         }
     }
 
     createError(e) {
-        const err = new Error('At index #'.concat(this.index).concat(' > ').concat(e.stack));
-        //    err.index = self.index;
-        //    err.scope = self.scope;
-        // e.chunk = chunk; mmmm it's bad idea...
-        /*
-     e.toString = function() {
-      return e.errmsg;
-    }
-    */
+        const stack = e.stack.split('\n').slice(0, 2).join('\n');
+        const err = new Error('At index #'.concat(this.index).concat(' > ').concat(stack));
         return err;
     }
 
