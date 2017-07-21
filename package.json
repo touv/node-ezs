@@ -41,5 +41,10 @@
     "eslint-plugin-react": "^6.10.3",
     "istanbul": "^0.4.5",
     "mocha": "^3.2.0"
+  },
+  "dependencies": {
+    "autocast": "0.0.4",
+    "lodash": "^4.17.4",
+    "safe-eval": "^0.3.0"
   }
 }

@@ -53,6 +53,20 @@ describe('Build a pipeline', () => {
             });
     });
 
+    it('with error', (done) => {
+        const ten = new Decade();
+        ten
+            .pipe(ezs(() => {
+                throw new Error('Bang!');
+            }))
+            .on('data', (chunk) => {
+                assert.ok(chunk instanceof Error);
+            })
+            .on('end', () => {
+                done();
+            });
+    });
+
     it('with definied transformation', (done) => {
         let res = 0;
         const ten = new Decade();
@@ -103,15 +117,15 @@ describe('Build a pipeline', () => {
                 done();
             });
     });
-
-    it('with empty pipeline', (done) => {
+    it('with standard pipeline', (done) => {
         let res = 0;
         const ten = new Decade();
         ten
             .pipe(ezs((input, output) => {
                 output.send(input);
             }))
-            .pipe(ezs.pipeline())
+            .pipe(ezs('increment', { step: 2 }))
+            .pipe(ezs('decrement', { step: 2 }))
             .on('data', (chunk) => {
                 res += chunk;
             })
@@ -120,5 +134,180 @@ describe('Build a pipeline', () => {
                 done();
             });
     });
+    it('with object pipeline', (done) => {
+        let res = 0;
+        const commands = [
+            {
+                name: 'increment',
+                args: {
+                    step: 2,
+                },
+            },
+            {
+                name: 'decrement',
+                args: {
+                    step: 2,
+                },
+            },
+        ];
+        const ten = new Decade();
+        ten
+            .pipe(ezs((input, output) => {
+                output.send(input);
+            }))
+            .pipe(ezs.pipeline(commands))
+            .pipe(ezs((input, output) => {
+                output.send(input);
+            }))
+            .on('data', (chunk) => {
+                res += chunk;
+            })
+            .on('end', () => {
+                assert.strictEqual(res, 45);
+                done();
+            });
+    });
+    it('with script pipeline', (done) => {
+        let res = 0;
+        const commands = `
+            # My first ezs script
+            title = FOR TEST
+            description = increment & decrement to have the same value from input to output
+
+            [increment]
+            step = 2
+
+            [decrement]
+            step = 1
+        `;
+
+        const ten = new Decade();
+        ten
+            .pipe(ezs((input, output) => {
+                output.send(input);
+            }))
+            .pipe(ezs.script(commands))
+            .on('data', (chunk) => {
+                res += chunk;
+            })
+            .on('end', () => {
+                assert.strictEqual(res, 54);
+                done();
+            });
+    });
+    it('with advanced script pipeline', (done) => {
+        let res = 0;
+        const commands = `
+            # My first ezs script
+            title = FOR TEST
+            description = increment & decrement to have the same value from input to output
+
+            [increment]
+            step = fix(2)
+
+            [decrement]
+            step = fix(1)
+        `;
+        const ten = new Decade();
+        ten
+            .pipe(ezs((input, output) => {
+                output.send(input);
+            }))
+            .pipe(ezs.script(commands))
+            .on('data', (chunk) => {
+                res += chunk;
+            })
+            .on('end', () => {
+                assert.strictEqual(res, 54);
+                done();
+            });
+    });
+
+    it('with advanced script pipeline', (done) => {
+        let res = 0;
+        const commands = `
+            # My first ezs script
+            title = FOR TEST
+            description = increment & decrement to have the same value from input to output
+
+            [increment]
+            step = fix(1, 1, 2) -> max()
+
+            [decrement]
+            step = fix(1, 2, 3) -> min()
+        `;
+        const ten = new Decade();
+        ten
+            .pipe(ezs((input, output) => {
+                output.send(input);
+            }))
+            .pipe(ezs.script(commands))
+            .on('data', (chunk) => {
+                res += chunk;
+            })
+            .on('end', () => {
+                assert.strictEqual(res, 54);
+                done();
+            });
+    });
+
+
+    it('with assignement script pipeline', (done) => {
+        let res = 0;
+        const commands = `
+            # My first ezs script
+            title = FOR TEST
+            description = set local or global
+
+            [assignement]
+            a = fix('a')
+            b.c = fix('b.c')
+        `;
+        const ten = new Decade();
+        ten
+            .pipe(ezs((input, output) => {
+                output.send({ val: input });
+            }))
+            .pipe(ezs.script(commands))
+            .on('data', (chunk) => {
+                res = chunk;
+            })
+            .on('end', () => {
+                assert.strictEqual(res.a, 'a');
+                assert.strictEqual(res.b.c, 'b.c');
+                done();
+            });
+    });
+
+
+    it('with assignement script pipeline', (done) => {
+        let res = 0;
+        const commands = `
+            # My first ezs script
+            title = FOR TEST
+            description = set local or global
+
+            [assignement]
+            a = fix('a')
+
+            [assignement]
+            b = fix('b')
+        `;
+        const ten = new Decade();
+        ten
+            .pipe(ezs((input, output) => {
+                output.send({ val: input });
+            }))
+            .pipe(ezs.script(commands))
+            .on('data', (chunk) => {
+                res = chunk;
+            })
+            .on('end', () => {
+                assert.strictEqual(res.a, 'a');
+                assert.strictEqual(res.b, 'b');
+                done();
+            });
+    });
+    /* */
 });
 
