@@ -53,14 +53,18 @@ export default class Engine extends Transform {
             this.func.call(this.scope, chunk, feed);
         } catch (e) {
             const err = this.createError(e);
+            if (process.env.NODE_ENV !== 'production') {
+                console.error(err.message);
+            }
             this.push(err);
             done();
         }
     }
 
     createError(e) {
-        const stack = e.stack.split('\n').slice(0, 2).join('\n');
-        const err = new Error('At index #'.concat(this.index).concat(' > ').concat(stack));
+        const msg = ' in item #'.concat(this.index);
+        const stack = e.stack.split('\n').slice(0, 2);
+        const err = new Error(stack[0].concat(msg).concat('\n').concat(stack[1]));
         return err;
     }
 

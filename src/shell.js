@@ -19,6 +19,12 @@ const parse = context => (value) => {
 
 
 const analyse = context => (value) => {
+    if (Array.isArray(value)) {
+        return value.map(analyse(context));
+    }
+    if (!value) {
+        return value;
+    }
     if (value.match(/^[a-zA-Z][a-zA-Z0-9]*[(]/)) {
         return parse(context)(value);
     }

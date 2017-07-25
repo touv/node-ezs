@@ -1,3 +1,5 @@
+import filtrex from 'filtrex';
+
 const fix = (input, ...args) => {
     if (args.length === 1) {
         return args[0];
@@ -5,6 +7,9 @@ const fix = (input, ...args) => {
     return args;
 };
 
+const compute = (input, expr) => filtrex(expr)(input);
+
 export default {
     fix,
+    compute,
 };

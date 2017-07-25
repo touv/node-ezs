@@ -260,8 +260,12 @@ describe('Build a pipeline', () => {
             description = set local or global
 
             [assignement]
-            a = fix('a')
-            b.c = fix('b.c')
+            key = a 
+            value = fix('a')
+
+            [assignement]
+            key = b.c
+            value = fix('b.c')
         `;
         const ten = new Decade();
         ten
@@ -279,6 +283,34 @@ describe('Build a pipeline', () => {
             });
     });
 
+    it('with assignement(multi) script pipeline', (done) => {
+        let res = 0;
+        const commands = `
+            # My first ezs script
+            title = FOR TEST
+            description = set local or global
+
+            [assignement]
+            key = a 
+            value = fix('a')
+            key = b.c
+            value = fix('b.c')
+        `;
+        const ten = new Decade();
+        ten
+            .pipe(ezs((input, output) => {
+                output.send({ val: input });
+            }))
+            .pipe(ezs.script(commands))
+            .on('data', (chunk) => {
+                res = chunk;
+            })
+            .on('end', () => {
+                assert.strictEqual(res.a, 'a');
+                assert.strictEqual(res.b.c, 'b.c');
+                done();
+            });
+    });
 
     it('with assignement script pipeline', (done) => {
         let res = 0;
@@ -288,10 +320,12 @@ describe('Build a pipeline', () => {
             description = set local or global
 
             [assignement]
-            a = fix('a')
+            key = a
+            value = fix('a')
 
             [assignement]
-            b = fix('b')
+            key = b
+            value = fix('b')
         `;
         const ten = new Decade();
         ten
@@ -308,6 +342,71 @@ describe('Build a pipeline', () => {
                 done();
             });
     });
+
+
+    it('with assignement with computation script pipeline', (done) => {
+        let res = 0;
+        const commands = `
+            # My first ezs script
+            title = FOR TEST
+            description = set local or global
+
+            [assignement]
+            key = a
+            value = 3
+            key = b
+            value = 4
+
+            [assignement]
+            key = c
+            value = compute('a * b')
+
+        `;
+        const ten = new Decade();
+        ten
+            .pipe(ezs((input, output) => {
+                output.send({ val: input });
+            }))
+            .pipe(ezs.script(commands))
+            .on('data', (chunk) => {
+                res = chunk;
+            })
+            .on('end', () => {
+                assert.strictEqual(res.a, 3);
+                assert.strictEqual(res.b, 4);
+                assert.strictEqual(res.c, 12);
+                done();
+            });
+    });
+
+    it('with assignement with quote script pipeline', (done) => {
+        let res = 0;
+        const commands = `
+            # My first ezs script
+            title = FOR TEST
+            description = set local or global
+
+            [assignement]
+            key = a
+            value = l'école!
+
+        `;
+        const ten = new Decade();
+        ten
+            .pipe(ezs((input, output) => {
+                output.send({ val: input });
+            }))
+            .pipe(ezs.script(commands))
+            .on('data', (chunk) => {
+                res = chunk;
+            })
+            .on('end', () => {
+                assert.strictEqual(res.a, 'l\'école!');
+                done();
+            });
+    });
+
+
     /* */
 });
 
