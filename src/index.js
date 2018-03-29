@@ -1,5 +1,6 @@
 import Engine from './engine';
 import Pipeline from './pipeline';
+import Balancer from './balancer';
 import Single from './single';
 import Script from './script';
 import File from './file';
@@ -8,11 +9,13 @@ import Catcher from './catcher';
 import Plugins from './plugins';
 import Statement from './statement';
 import Meta from './meta';
+import Server from './server';
 
 const ezs = (name, opts) => new Engine(ezs, Statement.get(ezs, name, opts), opts);
 const ezsPath = [process.cwd()];
 
 ezs.pipeline = (commands, options) => new Pipeline(ezs, commands, options);
+ezs.balancer = (commands, options) => new Balancer(ezs, commands, options);
 ezs.all = (name, opts) => new Engine(ezs, Statement.get(ezs, name, opts), opts);
 ezs.single = (mixed, options) => new Single(ezs, mixed, options);
 ezs.metaString = (commands, options) => new Meta(ezs, commands, options);
@@ -41,7 +44,7 @@ ezs.command = (stream, command) => {
     }
     throw new Error(`Bad mode: ${mode}`);
 };
-
+ezs.createServer = opts => Server.createServer(ezs, opts);
 
 ezs.use(Plugins);
 

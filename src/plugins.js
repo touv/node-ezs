@@ -111,6 +111,18 @@ function keep(data, feed) {
     return feed.send(obj);
 }
 
+function concat(data, feed) {
+    if (this.buffer === undefined) {
+        this.buffer = '';
+    }
+    if (this.isLast()) {
+        feed.send(this.buffer);
+        return feed.close();
+    }
+    this.buffer = this.buffer.concat(data);
+    return feed.end();
+}
+
 export default {
     assign,
     replace,
@@ -118,4 +130,5 @@ export default {
     extract,
     keep,
     debug,
+    concat,
 };
