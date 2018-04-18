@@ -1,14 +1,11 @@
 const assert = require('assert');
-const fs = require('fs');
-const Dir = require('path');
+const http = require('http');
 const ezs = require('../lib');
 
 
 ezs.use(require('./locals'));
 
 const Read = require('stream').Readable;
-const PassThrough = require('stream').PassThrough;
-
 
 class Decade extends Read {
     constructor() {
@@ -37,6 +34,47 @@ describe('through a server', () => {
         server.close();
     });
 
+    it('register commands', (done) => {
+        const commands = [
+            {
+                name: 'increment',
+                args: {
+                    step: 2,
+                },
+            },
+            {
+                name: 'decrement',
+                args: {
+                    step: 2,
+                },
+            },
+        ];
+        const requestBody = JSON.stringify(commands);
+        const requestOptions = {
+            hostname: '127.0.0.1',
+            port: 31976,
+            path: '/',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Content-Length': requestBody.length,
+            },
+        };
+
+        http.request(requestOptions, (res) => {
+            let requestResponse = '';
+            res.setEncoding('utf8');
+            res.on('data', (chunk) => {
+                requestResponse += chunk;
+            });
+            res.on('end', () => {
+                const result = JSON.parse(requestResponse);
+                assert.equal(result.id, '4f54045b1980048ea929d3379fb425cace53238d');
+                done();
+            });
+        }).write(requestBody);
+    });
+
     it('with no transformation', (done) => {
         let res = 0;
         const commands = [
@@ -53,11 +91,11 @@ describe('through a server', () => {
                 },
             },
         ];
-        const targets = {
+        const options = {
             servers: [
                 {
                     host: 'localhost',
-                    port: 141176,
+                    port: 31976,
                 },
             ],
         };
@@ -66,7 +104,7 @@ describe('through a server', () => {
             .pipe(ezs((input, output) => {
                 output.send(input);
             }))
-            .pipe(ezs.delegate(commands, targets))
+            .pipe(ezs.dispatch(commands, options))
             .pipe(ezs((input, output) => {
                 output.send(input);
             }))

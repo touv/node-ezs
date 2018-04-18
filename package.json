@@ -47,9 +47,12 @@
   },
   "dependencies": {
     "autocast": "0.0.4",
+    "cbor": "^4.0.0",
     "deep-object-diff": "^1.0.4",
     "filtrex": "^0.5.4",
     "lodash": "^4.17.4",
+    "node-fetch": "^2.1.2",
+    "p-map": "^1.2.0",
     "safe-eval": "^0.3.0"
   }
 }

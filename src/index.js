@@ -1,6 +1,6 @@
 import Engine from './engine';
 import Pipeline from './pipeline';
-import Balancer from './balancer';
+import Dispatch from './dispatch';
 import Single from './single';
 import Script from './script';
 import File from './file';
@@ -15,7 +15,7 @@ const ezs = (name, opts) => new Engine(ezs, Statement.get(ezs, name, opts), opts
 const ezsPath = [process.cwd()];
 
 ezs.pipeline = (commands, options) => new Pipeline(ezs, commands, options);
-ezs.balancer = (commands, options) => new Balancer(ezs, commands, options);
+ezs.dispatch = (commands, options) => new Dispatch(ezs, commands, options);
 ezs.all = (name, opts) => new Engine(ezs, Statement.get(ezs, name, opts), opts);
 ezs.single = (mixed, options) => new Single(ezs, mixed, options);
 ezs.metaString = (commands, options) => new Meta(ezs, commands, options);

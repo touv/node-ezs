@@ -28,14 +28,17 @@ function register(data, feed) {
         if (err) {
             return feed.send(err);
         }
-        return feed.send(filename);
+        return feed.send(JSON.stringify({
+            id: filename,
+            concurrency: os.cpus().length,
+        }));
     });
     return null;
 }
 
 function createServer(ezs, options) {
     const opts = options || {};
-    const port = opts.port || 141176;
+    const port = !isNaN(opts.port) ? opts.port : 31976;
     return http.createServer((request, response) => {
         const { url, method, headers } = request;
         const filepath = path.resolve(dirname, '.', url);
@@ -81,5 +84,3 @@ function createServer(ezs, options) {
 export default {
     createServer,
 };
-
-console.log('Server running at http://127.0.0.1:8888/');
