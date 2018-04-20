@@ -25,30 +25,10 @@ describe('through a server', () => {
     before(() => {
         server = ezs.createServer();
     });
-
     after(() => {
         server.close();
     });
-    /*
-    it('register commands', (done) => {
-        const commands = [
-            {
-                name: 'increment',
-                args: {
-                    step: 2,
-                },
-            },
-            {
-                name: 'decrement',
-                args: {
-                    step: 2,
-                },
-            },
-        ];
-    });
-    */
-
-    it('with no transformation', (done) => {
+    it('with simple pipeline', (done) => {
         let res = 0;
         const commands = [
             {
@@ -64,22 +44,12 @@ describe('through a server', () => {
                 },
             },
         ];
-        const options = {
-            servers: [
-                '127.0.0.1',
-            ],
-        };
+        const servers = [
+            '127.0.0.1',
+        ];
         const ten = new Decade();
         ten
-            .pipe(ezs((input, output) => {
-                output.send(input);
-                console.log('avant >>>', input);
-            }))
-            .pipe(ezs.dispatch(commands, options))
-            .pipe(ezs((input, output) => {
-                console.log('apres >>>', input);
-                output.send(input);
-            }))
+            .pipe(ezs.dispatch(commands, servers))
             .on('data', (chunk) => {
                 res += chunk;
             })

@@ -31,10 +31,9 @@ function register(data, feed) {
 }
 
 function createServer(ezs) {
-    return http.createServer((request, response) => {
+    const server = http.createServer((request, response) => {
         const { url, method } = request;
         const cmdid = url.slice(1);
-        console.log('serve get', cmdid, pipelines[cmdid], register);
         if (url === '/' && method === 'POST') {
             request
                 .pipe(ezs('concat'))
@@ -47,7 +46,6 @@ function createServer(ezs) {
             response.writeHead(200);
             request
                 .pipe(decoder)
-                .pipe(ezs('debug', { text: 'XXX' }))
                 .pipe(ezs.pipeline(pipelines[cmdid]))
                 .pipe(ezs(encoder))
                 .pipe(response);
@@ -56,11 +54,12 @@ function createServer(ezs) {
             response.end();
         }
     }).listen(31976);
+    // console.log(`PID ${process.pid} listening on 31976`);
+    return server;
 }
 
 function createCluster(ezs, options) {
     if (cluster.isMaster) {
-        console.log(`Master ${process.pid} is running`);
         for (let i = 0; i < numCPUs; i += 1) {
             cluster.fork();
         }
@@ -72,7 +71,6 @@ function createCluster(ezs, options) {
         */
     } else {
         createServer(ezs, options);
-        console.log(`Worker ${process.pid} started`);
     }
     return cluster;
 }

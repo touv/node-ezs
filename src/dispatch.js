@@ -29,7 +29,7 @@ const registerTo = ({ hostname, port }, commands) =>
             res.on('end', () => {
                 try {
                     const result = JSON.parse(requestResponse);
-                    console.log(`Register ${hostname}:${port} under ${result.id}`);
+                    console.log(`Register ${hostname}:${port} with ${result.id}.`);
                     resolve({
                         hostname,
                         port,
@@ -55,13 +55,13 @@ const connectTo = tubout => serversOptions =>
                     res => res.pipe(tubout)),
             ));
         } else {
-            reject(new Error('Invamid servesrOptions'));
+            reject(new Error('Invalid servers options.'));
         }
     });
 
 export default class Dispatch extends Duplex {
-    constructor(ezs, commands, options) {
-        super({ ...options, objectMode: true });
+    constructor(ezs, commands, servers) {
+        super({ objectMode: true });
 
         this.handles = [];
         this.tubin = new PassThrough({ objectMode: true });
@@ -81,10 +81,10 @@ export default class Dispatch extends Duplex {
         });
         this.tubout.pause();
 
-        assert.equal(typeof options, 'object', 'options should be a object.');
-        assert(Array.isArray(options.servers), 'options.servers should be an array.');
+        assert(Array.isArray(commands), 'commands should be an array.');
+        assert(Array.isArray(servers), 'servers should be an array.');
 
-        this.servers = options.servers.map(ip => Object.create({
+        this.servers = servers.map(ip => Object.create({
             hostname: ip,
             port: 31976,
         }));
@@ -95,10 +95,8 @@ export default class Dispatch extends Duplex {
 
     _write(chunk, encoding, callback) {
         const self = this;
-        console.log('receive', chunk);
         if (self.semaphore) {
             self.semaphore = false;
-            console.log('servers', this.servers);
             pMap(self.servers, server => registerTo(server, self.commands))
                 .then(connectTo(self.tubin))
                 .then((handles) => {
@@ -119,7 +117,7 @@ export default class Dispatch extends Duplex {
 
     balance(chunk, encoding, callback) {
         this.lastIndex += 1;
-        console.log('Balance on ', this.handles.length, this.lastIndex);
+        // console.log('Balance on ', this.handles.length, this.lastIndex);
         if (this.lastIndex >= this.handles.length) {
             this.lastIndex = 0;
         }
