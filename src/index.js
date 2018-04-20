@@ -45,6 +45,7 @@ ezs.command = (stream, command) => {
     throw new Error(`Bad mode: ${mode}`);
 };
 ezs.createServer = opts => Server.createServer(ezs, opts);
+ezs.createCluster = opts => Server.createCluster(ezs, opts);
 
 ezs.use(Plugins);
 

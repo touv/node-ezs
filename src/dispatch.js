@@ -1,52 +1,72 @@
 import { PassThrough, Duplex } from 'stream';
 import assert from 'assert';
 import http from 'http';
-import fetch from 'node-fetch';
 import pMap from 'p-map';
+import cbor from 'cbor';
 
-const target2servers = (servers) => {
-    return [
-        {
-            hostname: '127.0.0.1',
-            port: 31976,
-        },
-    ];
-};
+const decoder = new cbor.Decoder();
 
 const registerTo = ({ hostname, port }, commands) =>
-    new Promise((resolve, reject) =>
-        fetch(`http://${hostname}:${port}`, {
-            method: 'POST',
-            body: JSON.stringify(commands),
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        })
-        .then(res => res.json())
-        .then(({ id }) => resolve({
+    new Promise((resolve, reject) => {
+        const requestBody = JSON.stringify(commands);
+        const requestOptions = {
             hostname,
             port,
-            path: `/${id}`,
+            path: '/',
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Content-Length': requestBody.length,
             },
-        }))
-        .catch(err => reject(err)));
+        };
+        http.request(requestOptions, (res) => {
+            let requestResponse = '';
+            res.setEncoding('utf8');
+            res.on('error', error => reject(error));
+            res.on('data', (chunk) => {
+                requestResponse += chunk;
+            });
+            res.on('end', () => {
+                try {
+                    const result = JSON.parse(requestResponse);
+                    console.log(`Register ${hostname}:${port} under ${result.id}`);
+                    resolve({
+                        hostname,
+                        port,
+                        path: `/${result.id}`,
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    });
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        }).write(requestBody);
+    });
 
 const connectTo = tubout => serversOptions =>
-    new Promise(resolve => resolve(serversOptions.map(
-            serverOptions =>
-            http.request(serverOptions,
-                res => res.pipe(tubout)),
-        )));
+    new Promise((resolve, reject) => {
+        if (serversOptions) {
+            resolve(serversOptions.map(
+                serverOptions =>
+                http.request(serverOptions,
+                    res => res.pipe(tubout)),
+            ));
+        } else {
+            reject(new Error('Invamid servesrOptions'));
+        }
+    });
 
 export default class Dispatch extends Duplex {
     constructor(ezs, commands, options) {
         super({ ...options, objectMode: true });
 
         this.handles = [];
-        this.tubout = new PassThrough({ objectMode: true });
+        this.tubin = new PassThrough({ objectMode: true });
+        this.tubout = this.tubin.pipe(decoder);
+
         this.on('finish', () => {
             this.handles.forEach(handle => handle.end());
         });
@@ -61,11 +81,13 @@ export default class Dispatch extends Duplex {
         });
         this.tubout.pause();
 
-
         assert.equal(typeof options, 'object', 'options should be a object.');
         assert(Array.isArray(options.servers), 'options.servers should be an array.');
 
-        this.servers = target2servers(options.servers);
+        this.servers = options.servers.map(ip => Object.create({
+            hostname: ip,
+            port: 31976,
+        }));
         this.commands = commands;
         this.semaphore = true;
         this.lastIndex = 0;
@@ -73,10 +95,12 @@ export default class Dispatch extends Duplex {
 
     _write(chunk, encoding, callback) {
         const self = this;
+        console.log('receive', chunk);
         if (self.semaphore) {
             self.semaphore = false;
+            console.log('servers', this.servers);
             pMap(self.servers, server => registerTo(server, self.commands))
-                .then(connectTo(self.tubout))
+                .then(connectTo(self.tubin))
                 .then((handles) => {
                     self.handles = handles;
                     self.balance(chunk, encoding, callback);
@@ -95,10 +119,11 @@ export default class Dispatch extends Duplex {
 
     balance(chunk, encoding, callback) {
         this.lastIndex += 1;
+        console.log('Balance on ', this.handles.length, this.lastIndex);
         if (this.lastIndex >= this.handles.length) {
             this.lastIndex = 0;
         }
-        this.handles[this.lastIndex].write(chunk, encoding, callback);
+        this.handles[this.lastIndex].write(cbor.encode(chunk), encoding, callback);
     }
 
 }
