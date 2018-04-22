@@ -3,6 +3,7 @@ import assert from 'assert';
 import http from 'http';
 import pMap from 'p-map';
 import cbor from 'cbor';
+import config from './config';
 
 
 const registerTo = ({ hostname, port }, commands) =>
@@ -68,7 +69,6 @@ export default class Dispatch extends Duplex {
         this.tubout = this.tubin.pipe(decoder);
 
         this.on('finish', () => {
-            console.log('close all handles');
             this.handles.forEach(handle => handle.end());
         });
         this.tubout.on('data', (chunk, encoding) => {
@@ -87,7 +87,7 @@ export default class Dispatch extends Duplex {
 
         this.servers = servers.map(ip => Object.create({
             hostname: ip,
-            port: 31976,
+            port: config.port,
         }));
         this.commands = commands;
         this.semaphore = true;
@@ -121,7 +121,7 @@ export default class Dispatch extends Duplex {
         if (this.lastIndex >= this.handles.length) {
             this.lastIndex = 0;
         }
-        console.log(`Balance on #${this.lastIndex}`, chunk);
+        // console.log(`Balance on #${this.lastIndex}`, chunk);
         this.handles[this.lastIndex].write(cbor.encode(chunk), encoding, callback);
     }
 

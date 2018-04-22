@@ -167,7 +167,7 @@ describe('Build a pipeline', () => {
             .pipe(ezs((input, output) => {
                 output.send(input);
             }))
-            .pipe(ezs.pipeline())
+            .pipe(ezs.pipeline([]))
             .on('data', (chunk) => {
                 res += chunk;
             })

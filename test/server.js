@@ -21,15 +21,12 @@ class Decade extends Read {
 }
 
 describe('through a server', () => {
-    let server;
-    before(() => {
-        server = ezs.createServer();
-    });
+    const server = ezs.createServer();
+
     after(() => {
         server.close();
     });
 
-    //    const server = ezs.createServer();
     it('with simple pipeline', (done) => {
         let res = 0;
         const commands = [
@@ -51,7 +48,6 @@ describe('through a server', () => {
         ];
         const ten = new Decade();
         ten
-            .pipe(ezs('debug', { text: 'First' }))
             .pipe(ezs.dispatch(commands, servers))
             .on('data', (chunk) => {
                 res += chunk;
@@ -62,13 +58,13 @@ describe('through a server', () => {
             });
     });
 
-    it('with second pipeline', (done) => {
+    it('with second pipeline with different parameter', (done) => {
         let res = 0;
         const commands = [
             {
                 name: 'increment',
                 args: {
-                    step: 2,
+                    step: 3,
                 },
             },
             {
@@ -83,17 +79,45 @@ describe('through a server', () => {
         ];
         const ten = new Decade();
         ten
-            .pipe(ezs('debug', { text: 'Second' }))
             .pipe(ezs.dispatch(commands, servers))
             .on('data', (chunk) => {
                 res += chunk;
             })
             .on('end', () => {
-                assert.strictEqual(res, 45);
+                assert.strictEqual(res, 54);
                 done();
             });
     });
 
-
+    it('with buggy pipeline', (done) => {
+        let res = 0;
+        const commands = [
+            {
+                name: 'increment',
+                args: {
+                    step: 2,
+                },
+            },
+            {
+                name: 'boum',
+                args: {
+                    step: 2,
+                },
+            },
+        ];
+        const servers = [
+            '127.0.0.1',
+        ];
+        const ten = new Decade();
+        ten
+            .pipe(ezs.dispatch(commands, servers))
+            .on('data', (chunk) => {
+                res += chunk;
+            })
+            .on('end', () => {
+                assert.strictEqual(res, 0);
+                done();
+            });
+    });
     /**/
 });

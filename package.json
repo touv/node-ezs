@@ -7,7 +7,8 @@
   },
   "main": "./lib/index.js",
   "bin": {
-    "ezs": "./bin/ezs"
+    "ezs": "./bin/ezs",
+    "ezsd": "./bin/ezsd"
   },
   "scripts": {
     "test": "istanbul test ./node_modules/.bin/_mocha -- -R spec",

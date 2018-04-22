@@ -123,6 +123,13 @@ function concat(data, feed) {
     return feed.end();
 }
 
+function json(data, feed) {
+    if (this.isLast()) {
+        return feed.send(data);
+    }
+    return feed.send(JSON.parse(data));
+}
+
 export default {
     assign,
     replace,
@@ -131,4 +138,5 @@ export default {
     keep,
     debug,
     concat,
+    json,
 };

@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import cbor from 'cbor';
 import cluster from 'cluster';
 import http from 'http';
+import config from './config';
 
 const numCPUs = os.cpus().length;
 
@@ -33,6 +34,7 @@ function createServer(ezs, store) {
         if (url === '/' && method === 'POST') {
             request
                 .pipe(ezs('concat'))
+                .pipe(ezs('json'))
                 .pipe(ezs(register(store)))
                 .pipe(response);
         } else if (url.match(/^\/[a-f0-9]{40}$/i)
@@ -42,20 +44,35 @@ function createServer(ezs, store) {
             response.writeHead(200);
             store.get(cmdid)
                 .then((commands) => {
+                    console.log(`server will execute ${cmdid}`);
                     request
                         .pipe(decoder)
-                        .pipe(ezs('debug', { text: 'Server receive (decoded)' }))
                         .pipe(ezs.pipeline(commands))
-                        .pipe(ezs('debug', { text: 'Server generate (decoded)' }))
+                        .pipe(ezs.catch(console.error))
                         .pipe(ezs(encoder))
-                        .pipe(ezs('debug', { text: 'Server generate (encoded)' }))
                         .pipe(response);
+                });
+        } else if (url === '/info' && method === 'GET') {
+            store.all()
+                .then((keys) => {
+                    const info = {
+                        concurrency: numCPUs,
+                        register: keys,
+                    };
+                    const responseBody = JSON.stringify(info);
+                    const responseHeaders = {
+                        'Content-Type': 'application/json',
+                        'Content-Length': Buffer.byteLength(responseBody),
+                    };
+                    response.writeHead(200, responseHeaders);
+                    response.write(responseBody);
+                    response.end();
                 });
         } else {
             response.writeHead(404);
             response.end();
         }
-    }).listen(31976);
+    }).listen(config.port);
     // console.log(`PID ${process.pid} listening on 31976`);
     return server;
 }

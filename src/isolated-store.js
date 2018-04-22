@@ -19,5 +19,8 @@ export default class IsolatedStore {
             return resolve(this.store[key]);
         });
     }
+    all() {
+        return new Promise(resolve => resolve(Object.keys(this.store)));
+    }
 }
 
