@@ -4,7 +4,6 @@ import http from 'http';
 import pMap from 'p-map';
 import cbor from 'cbor';
 
-const decoder = new cbor.Decoder();
 
 const registerTo = ({ hostname, port }, commands) =>
     new Promise((resolve, reject) => {
@@ -29,11 +28,11 @@ const registerTo = ({ hostname, port }, commands) =>
             res.on('end', () => {
                 try {
                     const result = JSON.parse(requestResponse);
-                    console.log(`Register ${hostname}:${port} with ${result.id}.`);
+                    console.log(`Register ${hostname}:${port} with ${result}.`);
                     resolve({
                         hostname,
                         port,
-                        path: `/${result.id}`,
+                        path: `/${result}`,
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -63,11 +62,13 @@ export default class Dispatch extends Duplex {
     constructor(ezs, commands, servers) {
         super({ objectMode: true });
 
+        const decoder = new cbor.Decoder();
         this.handles = [];
         this.tubin = new PassThrough({ objectMode: true });
         this.tubout = this.tubin.pipe(decoder);
 
         this.on('finish', () => {
+            console.log('close all handles');
             this.handles.forEach(handle => handle.end());
         });
         this.tubout.on('data', (chunk, encoding) => {
@@ -117,10 +118,10 @@ export default class Dispatch extends Duplex {
 
     balance(chunk, encoding, callback) {
         this.lastIndex += 1;
-        // console.log('Balance on ', this.handles.length, this.lastIndex);
         if (this.lastIndex >= this.handles.length) {
             this.lastIndex = 0;
         }
+        console.log(`Balance on #${this.lastIndex}`, chunk);
         this.handles[this.lastIndex].write(cbor.encode(chunk), encoding, callback);
     }
 

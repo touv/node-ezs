@@ -28,6 +28,8 @@ describe('through a server', () => {
     after(() => {
         server.close();
     });
+
+    //    const server = ezs.createServer();
     it('with simple pipeline', (done) => {
         let res = 0;
         const commands = [
@@ -49,6 +51,7 @@ describe('through a server', () => {
         ];
         const ten = new Decade();
         ten
+            .pipe(ezs('debug', { text: 'First' }))
             .pipe(ezs.dispatch(commands, servers))
             .on('data', (chunk) => {
                 res += chunk;
@@ -58,6 +61,39 @@ describe('through a server', () => {
                 done();
             });
     });
+
+    it('with second pipeline', (done) => {
+        let res = 0;
+        const commands = [
+            {
+                name: 'increment',
+                args: {
+                    step: 2,
+                },
+            },
+            {
+                name: 'decrement',
+                args: {
+                    step: 2,
+                },
+            },
+        ];
+        const servers = [
+            '127.0.0.1',
+        ];
+        const ten = new Decade();
+        ten
+            .pipe(ezs('debug', { text: 'Second' }))
+            .pipe(ezs.dispatch(commands, servers))
+            .on('data', (chunk) => {
+                res += chunk;
+            })
+            .on('end', () => {
+                assert.strictEqual(res, 45);
+                done();
+            });
+    });
+
 
     /**/
 });

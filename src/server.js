@@ -1,4 +1,3 @@
-import assert from 'assert';
 import os from 'os';
 import crypto from 'crypto';
 import cbor from 'cbor';
@@ -6,8 +5,6 @@ import cluster from 'cluster';
 import http from 'http';
 
 const numCPUs = os.cpus().length;
-const decoder = new cbor.Decoder();
-const pipelines = {};
 
 function encoder(data, feed) {
     if (this.isLast()) {
@@ -16,41 +13,46 @@ function encoder(data, feed) {
     return feed.send(cbor.encode(data));
 }
 
-function register(data, feed) {
-    if (this.isLast()) {
-        return feed.close();
+function register(store) {
+    function registerCommand(data, feed) {
+        if (this.isLast()) {
+            return feed.close();
+        }
+        const shasum = crypto.createHash('sha1');
+        shasum.update(data.toString());
+        const cmdid = shasum.digest('hex');
+        return store.set(cmdid, data).then(() => feed.send(JSON.stringify(cmdid)));
     }
-    const shasum = crypto.createHash('sha1');
-    shasum.update(data.toString());
-    const cmdid = shasum.digest('hex');
-    pipelines[cmdid] = data;
-    return feed.send(JSON.stringify({
-        id: cmdid,
-        concurrency: numCPUs,
-    }));
+    return registerCommand;
 }
 
-function createServer(ezs) {
+function createServer(ezs, store) {
     const server = http.createServer((request, response) => {
         const { url, method } = request;
         const cmdid = url.slice(1);
         if (url === '/' && method === 'POST') {
             request
                 .pipe(ezs('concat'))
-                .pipe(ezs(register))
+                .pipe(ezs(register(store)))
                 .pipe(response);
         } else if (url.match(/^\/[a-f0-9]{40}$/i)
             && method === 'POST'
-            && pipelines[cmdid]
         ) {
+            const decoder = new cbor.Decoder();
             response.writeHead(200);
-            request
-                .pipe(decoder)
-                .pipe(ezs.pipeline(pipelines[cmdid]))
-                .pipe(ezs(encoder))
-                .pipe(response);
+            store.get(cmdid)
+                .then((commands) => {
+                    request
+                        .pipe(decoder)
+                        .pipe(ezs('debug', { text: 'Server receive (decoded)' }))
+                        .pipe(ezs.pipeline(commands))
+                        .pipe(ezs('debug', { text: 'Server generate (decoded)' }))
+                        .pipe(ezs(encoder))
+                        .pipe(ezs('debug', { text: 'Server generate (encoded)' }))
+                        .pipe(response);
+                });
         } else {
-            response.writeHead(204);
+            response.writeHead(404);
             response.end();
         }
     }).listen(31976);
@@ -58,7 +60,7 @@ function createServer(ezs) {
     return server;
 }
 
-function createCluster(ezs, options) {
+function createCluster(ezs, store) {
     if (cluster.isMaster) {
         for (let i = 0; i < numCPUs; i += 1) {
             cluster.fork();
@@ -70,7 +72,7 @@ function createCluster(ezs, options) {
         });
         */
     } else {
-        createServer(ezs, options);
+        createServer(ezs, store);
     }
     return cluster;
 }

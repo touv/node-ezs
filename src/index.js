@@ -8,6 +8,8 @@ import Output from './output';
 import Catcher from './catcher';
 import Plugins from './plugins';
 import Statement from './statement';
+import IsolatedStore from './isolated-store';
+import SharedStore from './shared-store';
 import Meta from './meta';
 import Server from './server';
 
@@ -44,8 +46,8 @@ ezs.command = (stream, command) => {
     }
     throw new Error(`Bad mode: ${mode}`);
 };
-ezs.createServer = opts => Server.createServer(ezs, opts);
-ezs.createCluster = opts => Server.createCluster(ezs, opts);
+ezs.createServer = () => Server.createServer(ezs, new IsolatedStore());
+ezs.createCluster = () => Server.createCluster(ezs, new SharedStore());
 
 ezs.use(Plugins);
 
