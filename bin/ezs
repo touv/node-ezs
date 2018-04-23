@@ -1,31 +1,76 @@
 #!/usr/bin/env node
 const fs = require('fs');
-const prog = require('caporal');
 const ezs = require('../lib');
 const { version } = require('../package.json');
+const yargs = require('yargs')
+    .env('EZS')
+    .usage('Usage: $0 [options] [<file>]')
+    .version(version)
+    .options({
+        verbose: {
+            alias: 'v',
+            default: false,
+            describe: 'Print some informations',
+            type: 'boolean',
+        },
+        daemon: {
+            alias: 'd',
+            demandOption: true,
+            describe: 'Launch daemon',
+            type: 'boolean',
+        },
+        port: {
+            alias: 'p',
+            describe: 'Change daemon\'port',
+            default: 31976,
+            type: 'number',
+        },
+    })
+    .epilogue('for more information, find our manual at https://github.com/touv/node-ezs');
 
-const isFile = (opt) => {
-    if (!fs.statSync(opt).isFile()) {
-        throw new Error(opt.concat(" doesn't exists."));
+const argv = yargs.argv;
+const firstarg = argv._.shift();
+
+if (argv.daemon) {
+    ezs.createCluster();
+}
+
+
+if (!argv.daemon && !firstarg) {
+    yargs.showHelp();
+    process.exit(1);
+}
+
+
+if (firstarg) {
+    let file;
+    try {
+        file = fs.realpathSync(firstarg);
+    } catch (e) {
+        console.error(`${firstarg} doesn't exists.`);
+        yargs.showHelp();
+        process.exit(1);
     }
-    return fs.realpathSync(opt);
-};
 
-prog
-  .version(version)
-  .description('Run ezs script with standard input.')
-  .argument('<file>', 'ezs script file', isFile)
-  .action((args, options, logger) => {
-      const script = fs.readFileSync(args.file).toString();
-      logger.warn('Reading standard input...');
-      process.stdin.resume();
-      process.stdin.setEncoding('utf8');
-      const stream1 = process.stdin.pipe(ezs.fromString(script));
-      const stream2 = stream1.pipe(ezs.toBuffer());
-      stream2.on('end', () => {
-          process.exit(1);
-      });
-      stream2.pipe(process.stdout);
-  });
+    if (!fs.statSync(file).isFile()) {
+        console.error(`${firstarg} isn't a file.`);
+        yargs.showHelp();
+        process.exit(1);
+    }
 
-prog.parse(process.argv);
+    const script = fs.readFileSync(file).toString();
+    const commands = ezs.parseString(script);
+
+    if (argv.verbose) {
+        console.error('Reading standard input...');
+    }
+
+    process.stdin.resume();
+    process.stdin.setEncoding('utf8');
+    const stream1 = process.stdin.pipe(ezs.pipeline(commands));
+    const stream2 = stream1.pipe(ezs.toBuffer());
+    stream2.on('end', () => {
+        process.exit(1);
+    });
+    stream2.pipe(process.stdout);
+}
