@@ -57,7 +57,7 @@ function createServer(ezs, store) {
                 .then((keys) => {
                     const info = {
                         concurrency: numCPUs,
-                        register: keys,
+                        register: keys.length,
                     };
                     const responseBody = JSON.stringify(info);
                     const responseHeaders = {
