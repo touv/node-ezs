@@ -5,6 +5,22 @@ import pMap from 'p-map';
 import cbor from 'cbor';
 import config from './config';
 
+const parseAddress = (srvr) => {
+    if (typeof srvr !== 'string') {
+        return null;
+    }
+    const hostWithPort = srvr.match(/^\[?([^\]]+)\]?:(\d+)$/);
+    if (hostWithPort) {
+        return {
+            hostname: hostWithPort[1],
+            port: Number(hostWithPort[2]),
+        };
+    }
+    return {
+        hostname: srvr,
+        port: Number(config.port),
+    };
+};
 
 const registerTo = ({ hostname, port }, commands) =>
     new Promise((resolve, reject) => {
@@ -85,10 +101,7 @@ export default class Dispatch extends Duplex {
         assert(Array.isArray(commands), 'commands should be an array.');
         assert(Array.isArray(servers), 'servers should be an array.');
 
-        this.servers = servers.map(ip => Object.create({
-            hostname: ip,
-            port: config.port,
-        }));
+        this.servers = servers.map(parseAddress).filter(x => x);
         this.commands = commands;
         this.semaphore = true;
         this.lastIndex = 0;

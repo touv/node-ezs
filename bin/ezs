@@ -15,9 +15,14 @@ const yargs = require('yargs')
         },
         daemon: {
             alias: 'd',
-            demandOption: true,
+            default: false,
             describe: 'Launch daemon',
             type: 'boolean',
+        },
+        server: {
+            alias: 's',
+            describe: 'Server to dispach commands',
+            type: 'string',
         },
         port: {
             alias: 'p',
@@ -67,7 +72,10 @@ if (firstarg) {
 
     process.stdin.resume();
     process.stdin.setEncoding('utf8');
-    const stream1 = process.stdin.pipe(ezs.pipeline(commands));
+
+    const servers = Array.isArray(argv.server) ? argv.server : [argv.server];
+    const statement = argv.server ? ezs.dispatch(commands, servers) : ezs.pipeline(commands);
+    const stream1 = process.stdin.pipe(statement);
     const stream2 = stream1.pipe(ezs.toBuffer());
     stream2.on('end', () => {
         process.exit(1);
