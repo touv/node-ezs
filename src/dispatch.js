@@ -62,13 +62,21 @@ const registerTo = ({ hostname, port }, commands) =>
         }).write(requestBody);
     });
 
-const connectTo = tubout => serversOptions =>
+const connectTo = tub => serversOptions =>
     new Promise((resolve, reject) => {
         if (serversOptions) {
             resolve(serversOptions.map(
                 serverOptions =>
                 http.request(serverOptions,
-                    res => res.pipe(tubout)),
+                    (res) => {
+                        if (res.statusCode === 200) {
+                            res.setEncoding('utf8');
+                            res.on('data', chunk => tub.write(chunk));
+                            res.on('end', () => tub.end());
+                        } else {
+                            console.error(`Server return ${res.statusCode}`);
+                        }
+                    }),
             ));
         } else {
             reject(new Error('Invalid servers options.'));

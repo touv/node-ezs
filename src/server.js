@@ -41,13 +41,21 @@ function createServer(ezs, store) {
             && method === 'POST'
         ) {
             const decoder = new cbor.Decoder();
-            response.writeHead(200);
             store.get(cmdid)
                 .then((commands) => {
+                    let processor;
+                    try {
+                        processor = ezs.pipeline(commands);
+                    } catch (e) {
+                        console.log(`server cannot execute ${cmdid}`);
+                        response.writeHead(400);
+                        response.end();
+                    }
                     console.log(`server will execute ${cmdid}`);
+                    response.writeHead(200);
                     request
                         .pipe(decoder)
-                        .pipe(ezs.pipeline(commands))
+                        .pipe(processor)
                         .pipe(ezs.catch(console.error))
                         .pipe(ezs(encoder))
                         .pipe(response);

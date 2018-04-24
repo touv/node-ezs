@@ -119,5 +119,37 @@ describe('through a server', () => {
                 done();
             });
     });
+
+    it('with unknowed command in the pipeline', (done) => {
+        let res = 0;
+        const commands = [
+            {
+                name: 'increment',
+                args: {
+                    step: 2,
+                },
+            },
+            {
+                name: 'turlututu',
+                args: {
+                    step: 2,
+                },
+            },
+        ];
+        const servers = [
+            '127.0.0.1',
+        ];
+        const ten = new Decade();
+        ten
+            .pipe(ezs.dispatch(commands, servers))
+            .on('data', (chunk) => {
+                res += chunk;
+            })
+            .on('end', () => {
+                assert.strictEqual(res, 0);
+                done();
+            });
+    });
+
     /**/
 });
