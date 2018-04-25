@@ -50,6 +50,7 @@ function createServer(ezs, store) {
                         console.log(`server cannot execute ${cmdid}`);
                         response.writeHead(400);
                         response.end();
+                        return;
                     }
                     console.log(`server will execute ${cmdid}`);
                     response.writeHead(200);

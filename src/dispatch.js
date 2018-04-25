@@ -62,24 +62,22 @@ const registerTo = ({ hostname, port }, commands) =>
         }).write(requestBody);
     });
 
-const connectTo = tub => serversOptions =>
+const connectTo = (serverOptions, target) =>
     new Promise((resolve, reject) => {
-        if (serversOptions) {
-            resolve(serversOptions.map(
-                serverOptions =>
-                http.request(serverOptions,
-                    (res) => {
-                        if (res.statusCode === 200) {
-                            res.setEncoding('utf8');
-                            res.on('data', chunk => tub.write(chunk));
-                            res.on('end', () => tub.end());
-                        } else {
-                            console.error(`Server return ${res.statusCode}`);
-                        }
-                    }),
-            ));
+        const handle = http.request(serverOptions, (res) => {
+            if (res.statusCode === 200) {
+                res.setEncoding('utf8');
+                res.on('data', chunk => target.tubin.write(chunk));
+                res.on('end', () => target.tubin.end());
+            } else {
+                target.emit('error', new Error(`${serverOptions.hostname}:${serverOptions.port} return ${res.statusCode}`));
+                target.tubin.end();
+            }
+        });
+        if (handle) {
+            resolve(handle);
         } else {
-            reject(new Error('Invalid servers options.'));
+            reject(new Error('Unable to connect to server'));
         }
     });
 
@@ -120,10 +118,12 @@ export default class Dispatch extends Duplex {
         if (self.semaphore) {
             self.semaphore = false;
             pMap(self.servers, server => registerTo(server, self.commands))
-                .then(connectTo(self.tubin))
-                .then((handles) => {
-                    self.handles = handles;
-                    self.balance(chunk, encoding, callback);
+                .then((workers) => {
+                    pMap(workers, worker => connectTo(worker, self))
+                        .then((handles) => {
+                            self.handles = handles;
+                            self.balance(chunk, encoding, callback);
+                        });
                 });
         } else {
             self.balance(chunk, encoding, callback);

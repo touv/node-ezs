@@ -145,9 +145,10 @@ describe('through a server', () => {
             .on('data', (chunk) => {
                 res += chunk;
             })
-            .on('end', () => {
-                assert.strictEqual(res, 0);
+            .on('error', (error) => {
+                assert(error instanceof Error);
                 done();
+
             });
     });
 
