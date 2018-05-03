@@ -1,5 +1,7 @@
 const assert = require('assert');
+const plugins = require('../lib/plugins');
 const ezs = require('../lib');
+const JSONezs = require('../lib/json').default;
 
 ezs.use(require('./locals'));
 
@@ -19,7 +21,6 @@ class Decade extends Read {
         }
     }
 }
-
 describe('through a server', () => {
     const server = ezs.createServer();
 
@@ -121,7 +122,6 @@ describe('through a server', () => {
     });
 
     it('with unknowed command in the pipeline', (done) => {
-        let res = 0;
         const commands = [
             {
                 name: 'increment',
@@ -142,14 +142,44 @@ describe('through a server', () => {
         const ten = new Decade();
         ten
             .pipe(ezs.dispatch(commands, servers))
-            .on('data', (chunk) => {
-                res += chunk;
-            })
             .on('error', (error) => {
                 assert(error instanceof Error);
                 done();
-
             });
+    });
+
+    it('with a same commands', (done) => {
+        const commands = `
+            [use]
+            plugin = test/locals
+
+            [increment]
+            step = 1
+
+        `;
+        const commandsOBJ1 = ezs.parseString(commands);
+        const commandsSTR1 = JSONezs.stringify(commandsOBJ1);
+        const commandsOBJ2 = JSONezs.parse(commandsSTR1);
+        const commandsSTR2 = JSONezs.stringify(commandsOBJ2);
+//        assert.strictEqual(commandsOBJ1[0].args, commandsOBJ2[0].args);
+        assert.strictEqual(commandsSTR1, commandsSTR2);
+        done();
+/*
+        let res = 0;
+        const ten = new Decade();
+        ten
+            .pipe(ezs((input, output) => {
+                output.send(input);
+            }))
+            .pipe(ezs.pipeline(cccommands))
+            .on('data', (chunk) => {
+                res += Number(chunk);
+            })
+            .on('end', () => {
+                assert.strictEqual(res, 90);
+                done();
+            });
+            */
     });
 
     /**/

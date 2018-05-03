@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import cbor from 'cbor';
 import cluster from 'cluster';
 import http from 'http';
+import JSONezs from './json';
 import config from './config';
 
 const numCPUs = os.cpus().length;
@@ -20,34 +21,34 @@ function register(store) {
             return feed.close();
         }
         const shasum = crypto.createHash('sha1');
-        shasum.update(data.toString());
+        shasum.update(data);
         const cmdid = shasum.digest('hex');
-        return store.set(cmdid, data).then(() => feed.send(JSON.stringify(cmdid)));
+        return store
+            .set(cmdid, data)
+            .then(() => feed.send(JSON.stringify(cmdid)));
     }
     return registerCommand;
 }
 
 function createServer(ezs, store) {
-    const server = http.createServer((request, response) => {
-        const { url, method } = request;
-        const cmdid = url.slice(1);
-        if (url === '/' && method === 'POST') {
-            request
-                .pipe(ezs('concat'))
-                .pipe(ezs('json'))
-                .pipe(ezs(register(store)))
-                .pipe(response);
-        } else if (url.match(/^\/[a-f0-9]{40}$/i)
-            && method === 'POST'
-        ) {
-            const decoder = new cbor.Decoder();
-            store.get(cmdid)
-                .then((commands) => {
+    const server = http
+        .createServer((request, response) => {
+            const { url, method } = request;
+            const cmdid = url.slice(1);
+            if (url === '/' && method === 'POST') {
+                request
+                    .pipe(ezs('concat'))
+                    .pipe(ezs(register(store)))
+                    .pipe(response);
+            } else if (url.match(/^\/[a-f0-9]{40}$/i) && method === 'POST') {
+                store.get(cmdid).then((cmds) => {
+                    const decoder = new cbor.Decoder();
                     let processor;
                     try {
+                        const commands = JSONezs.parse(cmds);
                         processor = ezs.pipeline(commands);
                     } catch (e) {
-                        console.log(`server cannot execute ${cmdid}`);
+                        console.log(`server cannot execute ${cmdid}`, e);
                         response.writeHead(400);
                         response.end();
                         return;
@@ -60,10 +61,10 @@ function createServer(ezs, store) {
                         .pipe(ezs.catch(console.error))
                         .pipe(ezs(encoder))
                         .pipe(response);
+                    request.resume();
                 });
-        } else if (url === '/info' && method === 'GET') {
-            store.all()
-                .then((keys) => {
+            } else if (url === '/info' && method === 'GET') {
+                store.all().then((keys) => {
                     const info = {
                         concurrency: numCPUs,
                         register: keys.length,
@@ -77,11 +78,12 @@ function createServer(ezs, store) {
                     response.write(responseBody);
                     response.end();
                 });
-        } else {
-            response.writeHead(404);
-            response.end();
-        }
-    }).listen(config.port);
+            } else {
+                response.writeHead(404);
+                response.end();
+            }
+        })
+        .listen(config.port);
     // console.log(`PID ${process.pid} listening on 31976`);
     return server;
 }

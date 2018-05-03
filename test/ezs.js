@@ -2,7 +2,7 @@ const assert = require('assert');
 const fs = require('fs');
 const Dir = require('path');
 const ezs = require('../lib');
-
+const Expression = require('../lib/expression').default;
 
 ezs.use(require('./locals'));
 
@@ -584,10 +584,10 @@ describe('Build a pipeline', () => {
     });
     //
     // A false good idea, because, we can't know how many objects
-    // would be sent to the next statement. So, in some case, the 
+    // would be sent to the next statement. So, in some case, the
     // feed should be closed before all data should be sent
     //
-    //it('with bad statement in the pipeline', (done) => {
+    // it('with bad statement in the pipeline', (done) => {
     //    const commands = `
     //        [use]
     //        plugin = test/locals
@@ -605,15 +605,17 @@ describe('Build a pipeline', () => {
     //            assert.ok(chunk instanceof Error);
     //            done();
     //        });
-    //});
+    // });
 
     it('without single statement in the  pipeline', (done) => {
         let res = 0;
         const ten = new Decade();
+        const expr1 = new Expression('self()');
+        const expr2 = new Expression('compute("a * b")');
         ten
             .pipe(ezs('replace', {
                 path: 'a',
-                value: shell => shell('self()'),
+                value: expr1,
             }))
             .pipe(ezs('assign', {
                 path: 'b',
@@ -621,7 +623,7 @@ describe('Build a pipeline', () => {
             }))
             .pipe(ezs('assign', {
                 path: 'c',
-                value: shell => shell('compute("a * b")'),
+                value: expr2,
             }))
             .on('data', (chunk) => {
                 res += chunk.c;
@@ -635,10 +637,11 @@ describe('Build a pipeline', () => {
     it('with single statement in the  pipeline', (done) => {
         let res = 0;
         const ten = new Decade();
+        const expr = new Expression('compute("a * b")');
         ten
             .pipe(ezs('replace', {
                 path: 'a',
-                value: shell => shell('self()'),
+                value: new Expression('self()'),
             }))
             .pipe(ezs.single('replace', {
                 path: 'b',
@@ -646,7 +649,7 @@ describe('Build a pipeline', () => {
             }))
             .pipe(ezs('assign', {
                 path: 'c',
-                value: shell => shell('compute("a * b")'),
+                value: expr,
             }))
             .on('data', (chunk) => {
                 res += chunk.c;
@@ -659,6 +662,8 @@ describe('Build a pipeline', () => {
 
     it('with single pipeline in the pipeline', (done) => {
         let res = 0;
+        const expr1 = new Expression('self()');
+        const expr2 = new Expression('compute("a * b")');
         const commands = [
             {
                 name: 'replace',
@@ -672,12 +677,12 @@ describe('Build a pipeline', () => {
         ten
             .pipe(ezs('replace', {
                 path: 'a',
-                value: shell => shell('self()'),
+                value: expr1,
             }))
             .pipe(ezs.single(commands))
             .pipe(ezs('assign', {
                 path: 'c',
-                value: shell => shell('compute("a * b")'),
+                value: expr2,
             }))
             .on('data', (chunk) => {
                 res += chunk.c;
@@ -732,7 +737,7 @@ describe('Build a pipeline', () => {
             .pipe(ezs('assign', {
                 path: 'isPair',
                 value: true,
-                test: shell => shell('compute("a % 2 == 0")'),
+                test: new Expression('compute("a % 2 == 0")'),
             }))
             .pipe(ezs.with('isPair', (input, output) => {
                 if (input) {
@@ -880,10 +885,11 @@ describe('Build a pipeline', () => {
 
     it('with shift statement in the  pipeline', (done) => {
         const ten = new Decade();
+        const expr = new Expression('self()');
         ten
             .pipe(ezs('replace', {
                 path: 'a',
-                value: shell => shell('self()'),
+                value: expr,
             }))
             .pipe(ezs('shift'))
             .on('data', (chunk) => {
@@ -900,7 +906,7 @@ describe('Build a pipeline', () => {
         ten
             .pipe(ezs('replace', {
                 path: 'a',
-                value: shell => shell('self()'),
+                value: new Expression('self()'),
             }))
             .pipe(ezs('extract', { path: 'a' }))
             .on('data', (chunk) => {
@@ -917,7 +923,7 @@ describe('Build a pipeline', () => {
         ten
             .pipe(ezs('replace', {
                 path: 'a',
-                value: shell => shell('self()'),
+                value: new Expression('self()'),
             }))
             .pipe(ezs('extract', { path: 'b' }))
             .on('data', (chunk) => {
@@ -934,11 +940,11 @@ describe('Build a pipeline', () => {
         ten
             .pipe(ezs('replace', {
                 path: 'a',
-                value: shell => shell('self()'),
+                value: new Expression('self()'),
             }))
             .pipe(ezs('assign', {
                 path: 'b',
-                value: shell => shell('get(\'a\')'),
+                value: new Expression('get(\'a\')'),
             }))
             .pipe(ezs('extract', { path: ['b', 'a'] }))
             .on('data', (chunk) => {
@@ -953,11 +959,11 @@ describe('Build a pipeline', () => {
         ten
             .pipe(ezs('replace', {
                 path: 'a',
-                value: shell => shell('self()'),
+                value: new Expression('self()'),
             }))
             .pipe(ezs('assign', {
                 path: 'b',
-                value: shell => shell('get(\'a\')'),
+                value: new Expression('get(\'a\')'),
             }))
             .pipe(ezs('keep', { path: 'a' }))
             .on('data', (chunk) => {
@@ -973,15 +979,15 @@ describe('Build a pipeline', () => {
         ten
             .pipe(ezs('replace', {
                 path: 'a',
-                value: shell => shell('self()'),
+                value: new Expression('self()'),
             }))
             .pipe(ezs('assign', {
                 path: 'b',
-                value: shell => shell('get(\'a\')'),
+                value: new Expression('get(\'a\')'),
             }))
             .pipe(ezs('assign', {
                 path: 'c',
-                value: shell => shell('get(\'a\')'),
+                value: new Expression('get(\'a\')'),
             }))
             .pipe(ezs('keep', { path: ['a', 'c'] }))
             .on('data', (chunk) => {
@@ -1094,7 +1100,7 @@ describe('Build a pipeline', () => {
             }))
             .pipe(ezs('assign', {
                 path: 'a',
-                value: shell => shell('fix(1)'),
+                value: new Expression('fix(1)'),
             }))
             .on('data', (chunk) => {
                 assert.strictEqual(chunk.a, 1);

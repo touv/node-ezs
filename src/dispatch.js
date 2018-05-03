@@ -3,6 +3,7 @@ import assert from 'assert';
 import http from 'http';
 import pMap from 'p-map';
 import cbor from 'cbor';
+import mergeStream from 'merge-stream';
 import config from './config';
 
 const parseAddress = (srvr) => {
@@ -35,46 +36,56 @@ const registerTo = ({ hostname, port }, commands) =>
                 'Content-Length': requestBody.length,
             },
         };
-        http.request(requestOptions, (res) => {
-            let requestResponse = '';
-            res.setEncoding('utf8');
-            res.on('error', error => reject(error));
-            res.on('data', (chunk) => {
-                requestResponse += chunk;
-            });
-            res.on('end', () => {
-                try {
-                    const result = JSON.parse(requestResponse);
-                    console.log(`Register ${hostname}:${port} with ${result}.`);
-                    resolve({
-                        hostname,
-                        port,
-                        path: `/${result}`,
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                    });
-                } catch (e) {
-                    reject(e);
-                }
-            });
-        }).write(requestBody);
+        http
+            .request(requestOptions, (res) => {
+                let requestResponse = '';
+                res.setEncoding('utf8');
+                res.on('error', error => reject(error));
+                res.on('data', (chunk) => {
+                    requestResponse += chunk;
+                });
+                res.on('end', () => {
+                    try {
+                        const result = JSON.parse(requestResponse);
+                        console.log(
+                            `Register ${hostname}:${port} with ${result}.`,
+                        );
+                        resolve({
+                            hostname,
+                            port,
+                            path: `/${result}`,
+                            method: 'POST',
+                            headers: {
+                                'Transfer-Encoding': 'chunked',
+                                'Content-Type': ' application/cbor',
+                            },
+                        });
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            })
+            .write(requestBody);
     });
 
-const connectTo = (serverOptions, target) =>
+const connectTo = (serverOptions, funnel) =>
     new Promise((resolve, reject) => {
         const handle = http.request(serverOptions, (res) => {
             if (res.statusCode === 200) {
-                res.setEncoding('utf8');
-                res.on('data', chunk => target.tubin.write(chunk));
-                res.on('end', () => target.tubin.end());
+                funnel.add(res);
             } else {
-                target.emit('error', new Error(`${serverOptions.hostname}:${serverOptions.port} return ${res.statusCode}`));
-                target.tubin.end();
+                funnel.emit(
+                    'error',
+                    new Error(
+                        `${serverOptions.hostname}:${
+                            serverOptions.port
+                        } return ${res.statusCode}`,
+                    ),
+                );
             }
         });
         if (handle) {
+            handle.flushHeaders();
             resolve(handle);
         } else {
             reject(new Error('Unable to connect to server'));
@@ -84,9 +95,10 @@ const connectTo = (serverOptions, target) =>
 export default class Dispatch extends Duplex {
     constructor(ezs, commands, servers) {
         super({ objectMode: true });
-
         const decoder = new cbor.Decoder();
+
         this.handles = [];
+
         this.tubin = new PassThrough({ objectMode: true });
         this.tubout = this.tubin.pipe(decoder);
 
@@ -111,20 +123,24 @@ export default class Dispatch extends Duplex {
         this.commands = commands;
         this.semaphore = true;
         this.lastIndex = 0;
+        this.funnel = mergeStream();
+        this.funnel.pipe(this.tubin);
     }
 
     _write(chunk, encoding, callback) {
         const self = this;
         if (self.semaphore) {
             self.semaphore = false;
-            pMap(self.servers, server => registerTo(server, self.commands))
-                .then((workers) => {
-                    pMap(workers, worker => connectTo(worker, self))
-                        .then((handles) => {
-                            self.handles = handles;
-                            self.balance(chunk, encoding, callback);
-                        });
-                });
+            pMap(self.servers, server =>
+                registerTo(server, self.commands),
+            ).then((workers) => {
+                pMap(workers, worker => connectTo(worker, self.funnel)).then(
+                    (handles) => {
+                        self.handles = handles;
+                        self.balance(chunk, encoding, callback);
+                    },
+                );
+            });
         } else {
             self.balance(chunk, encoding, callback);
         }
@@ -142,8 +158,10 @@ export default class Dispatch extends Duplex {
         if (this.lastIndex >= this.handles.length) {
             this.lastIndex = 0;
         }
-        // console.log(`Balance on #${this.lastIndex}`, chunk);
-        this.handles[this.lastIndex].write(cbor.encode(chunk), encoding, callback);
+        this.handles[this.lastIndex].write(
+            cbor.encode(chunk),
+            encoding,
+            callback,
+        );
     }
-
 }

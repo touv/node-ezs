@@ -1,5 +1,7 @@
 import _ from 'lodash';
 import util from 'util';
+import Expression from './expression';
+import JSONezs from './json';
 
 function assign(data, feed) {
     if (this.isLast()) {
@@ -130,13 +132,21 @@ function json(data, feed) {
     return feed.send(JSON.parse(data));
 }
 
+function jsonezs(data, feed) {
+    if (this.isLast()) {
+        return feed.send(data);
+    }
+    return feed.send(JSONezs.parse(data));
+}
+
 export default {
+    extract,
     assign,
     replace,
     shift,
-    extract,
     keep,
     debug,
     concat,
     json,
+    jsonezs,
 };
