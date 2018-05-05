@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import util from 'util';
-import Expression from './expression';
 import JSONezs from './json';
 
 function assign(data, feed) {
@@ -125,6 +124,36 @@ function concat(data, feed) {
     return feed.end();
 }
 
+function accumulate(data, feed) {
+    if (this.acc === undefined) {
+        this.acc = [];
+    }
+    const maxsize = this.getParam('maxsize', 11);
+
+    if (this.isLast()) {
+        if (this.acc.length) {
+            feed.send({ data: this.acc });
+        }
+        return feed.close();
+    }
+    this.acc.push(data);
+    if (this.acc.length >= maxsize) {
+        feed.write({ data: this.acc });
+        this.acc = [];
+    }
+    return feed.end();
+}
+
+function dissipate(data, feed) {
+    if (this.isLast()) {
+        return feed.send(data);
+    }
+    if (Array.isArray(data.data)) {
+        data.data.forEach(item => feed.write(item));
+    }
+    return feed.end();
+}
+
 function json(data, feed) {
     if (this.isLast()) {
         return feed.send(data);
@@ -147,6 +176,8 @@ export default {
     keep,
     debug,
     concat,
+    accumulate,
+    dissipate,
     json,
     jsonezs,
 };
