@@ -6,6 +6,13 @@ import cbor from 'cbor';
 import mergeStream from 'merge-stream';
 import config from './config';
 
+function encoder(data, feed) {
+    if (this.isLast()) {
+        return feed.close();
+    }
+    return feed.send(cbor.encode(data));
+}
+
 const parseAddress = (srvr) => {
     if (typeof srvr !== 'string') {
         return null;
@@ -68,7 +75,7 @@ const registerTo = ({ hostname, port }, commands) =>
             .write(requestBody);
     });
 
-const connectTo = (serverOptions, funnel) =>
+const connectTo = (ezs, serverOptions, funnel) =>
     new Promise((resolve, reject) => {
         const handle = http.request(serverOptions, (res) => {
             if (res.statusCode === 200) {
@@ -87,6 +94,7 @@ const connectTo = (serverOptions, funnel) =>
         if (handle) {
             const input = new PassThrough({ objectMode: true });
             input
+                .pipe(ezs(encoder))
                 .pipe(handle);
             resolve(input);
         } else {
@@ -127,6 +135,7 @@ export default class Dispatch extends Duplex {
         this.lastIndex = 0;
         this.funnel = mergeStream();
         this.funnel.pipe(this.tubin);
+        this.ezs = ezs;
     }
 
     _write(chunk, encoding, callback) {
@@ -136,7 +145,7 @@ export default class Dispatch extends Duplex {
             pMap(self.servers, server =>
                 registerTo(server, self.commands),
             ).then((workers) => {
-                pMap(workers, worker => connectTo(worker, self.funnel)).then(
+                pMap(workers, worker => connectTo(self.ezs, worker, self.funnel)).then(
                     (handles) => {
                         self.handles = handles;
                         self.balance(chunk, encoding, callback);
@@ -161,7 +170,7 @@ export default class Dispatch extends Duplex {
             this.lastIndex = 0;
         }
         this.handles[this.lastIndex].write(
-            cbor.encode(chunk),
+            chunk,
             encoding,
             callback,
         );
