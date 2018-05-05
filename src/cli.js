@@ -42,6 +42,9 @@ export default function cli(printer) {
 
     if (argv.daemon) {
         ezs.createCluster();
+        if (!argv.server) {
+            argv.server = '127.0.0.1';
+        }
     }
 
 
