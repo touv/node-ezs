@@ -85,8 +85,10 @@ const connectTo = (serverOptions, funnel) =>
             }
         });
         if (handle) {
-            handle.flushHeaders();
-            resolve(handle);
+            const input = new PassThrough({ objectMode: true });
+            input
+                .pipe(handle);
+            resolve(input);
         } else {
             reject(new Error('Unable to connect to server'));
         }
