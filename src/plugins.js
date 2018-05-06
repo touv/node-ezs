@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import util from 'util';
-import cbor from 'cbor';
+import JSONStream from 'JSONStream';
 import JSONezs from './json';
 
 function assign(data, feed) {
@@ -125,35 +125,6 @@ function concat(data, feed) {
     return feed.end();
 }
 
-function accumulate(data, feed) {
-    const maxsize = this.getParam('maxsize', 11);
-    if (this.acc === undefined) {
-        this.acc = [];
-    }
-    if (this.isLast()) {
-        if (this.acc.length) {
-            feed.send({ data: this.acc });
-        }
-        return feed.close();
-    }
-    this.acc.push(data);
-    if (this.acc.length >= maxsize) {
-        feed.write({ data: _.clone(this.acc) });
-        this.acc = [];
-    }
-    return feed.end();
-}
-
-function dissipate(data, feed) {
-    if (this.isLast()) {
-        return feed.send(data);
-    }
-    if (Array.isArray(data.data)) {
-        data.data.forEach(item => feed.write(item));
-    }
-    return feed.end();
-}
-
 function json(data, feed) {
     if (this.isLast()) {
         return feed.send(data);
@@ -169,10 +140,42 @@ function jsonezs(data, feed) {
 }
 
 function encoder(data, feed) {
-    if (this.isLast()) {
-        return feed.close();
+    let output = '';
+    if (this.isFirst()) {
+        output = '[';
+    } else {
+        output = ',';
     }
-    return feed.send(cbor.encode(data));
+    if (!this.isLast()) {
+        feed.write(output.concat(JSON.stringify(data, null, null)));
+    } else if (this.isLast() && this.getIndex() > 0) {
+        feed.write(']');
+        feed.close();
+    } else {
+        feed.write('[]');
+        feed.close();
+    }
+    feed.end();
+}
+
+function decoder(data, feed) {
+    if (!this.handle) {
+        const separator = this.getParam('separator', '*');
+        this.handle = JSONStream.parse(separator);
+        this.handle.on('data', obj => feed.write(obj));
+    }
+    if (!this.isLast()) {
+        if (!this.handle.write(data)) {
+            this.handle.once('drain', () => feed.end());
+        } else {
+            process.nextTick(() => feed.end());
+        }
+    } else {
+        this.handle.end();
+        process.nextTick(() => {
+            feed.close();
+        });
+    }
 }
 
 export default {
@@ -183,9 +186,8 @@ export default {
     keep,
     debug,
     concat,
-    accumulate,
-    dissipate,
     json,
     jsonezs,
     encoder,
+    decoder,
 };

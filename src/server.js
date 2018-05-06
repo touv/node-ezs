@@ -1,6 +1,5 @@
 import os from 'os';
 import crypto from 'crypto';
-import cbor from 'cbor';
 import cluster from 'cluster';
 import http from 'http';
 import JSONezs from './json';
@@ -35,7 +34,6 @@ function createServer(ezs, store) {
                     .pipe(response);
             } else if (url.match(/^\/[a-f0-9]{40}$/i) && method === 'POST') {
                 store.get(cmdid).then((cmds) => {
-                    const decoder = new cbor.Decoder();
                     let processor;
                     try {
                         const commands = JSONezs.parse(cmds);
@@ -49,7 +47,7 @@ function createServer(ezs, store) {
                     console.log(`server will execute ${cmdid}`);
                     response.writeHead(200);
                     request
-                        .pipe(decoder)
+                        .pipe(ezs('decoder'))
                         .pipe(processor)
                         .pipe(ezs.catch(console.error))
                         .pipe(ezs('encoder'))

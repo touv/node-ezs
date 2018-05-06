@@ -2,7 +2,6 @@ import { PassThrough, Duplex } from 'stream';
 import assert from 'assert';
 import http from 'http';
 import pMap from 'p-map';
-import cbor from 'cbor';
 import mergeStream from 'merge-stream';
 import config from './config';
 
@@ -57,7 +56,7 @@ const registerTo = ({ hostname, port }, commands) =>
                             method: 'POST',
                             headers: {
                                 'Transfer-Encoding': 'chunked',
-                                'Content-Type': ' application/cbor',
+                                'Content-Type': ' application/json',
                             },
                         });
                     } catch (e) {
@@ -98,12 +97,13 @@ const connectTo = (ezs, serverOptions, funnel) =>
 export default class Dispatch extends Duplex {
     constructor(ezs, commands, servers) {
         super({ objectMode: true });
-        const decoder = new cbor.Decoder();
 
         this.handles = [];
 
         this.tubin = new PassThrough({ objectMode: true });
-        this.tubout = this.tubin.pipe(decoder);
+        this.tubout = this.tubin
+            .pipe(ezs('decoder'))
+        ;
 
         this.on('finish', () => {
             this.handles.forEach(handle => handle.end());
