@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import util from 'util';
+import cbor from 'cbor';
 import JSONezs from './json';
 
 function assign(data, feed) {
@@ -125,11 +126,10 @@ function concat(data, feed) {
 }
 
 function accumulate(data, feed) {
+    const maxsize = this.getParam('maxsize', 11);
     if (this.acc === undefined) {
         this.acc = [];
     }
-    const maxsize = this.getParam('maxsize', 11);
-
     if (this.isLast()) {
         if (this.acc.length) {
             feed.send({ data: this.acc });
@@ -138,7 +138,7 @@ function accumulate(data, feed) {
     }
     this.acc.push(data);
     if (this.acc.length >= maxsize) {
-        feed.write({ data: this.acc });
+        feed.write({ data: _.clone(this.acc) });
         this.acc = [];
     }
     return feed.end();
@@ -168,6 +168,13 @@ function jsonezs(data, feed) {
     return feed.send(JSONezs.parse(data));
 }
 
+function encoder(data, feed) {
+    if (this.isLast()) {
+        return feed.close();
+    }
+    return feed.send(cbor.encode(data));
+}
+
 export default {
     extract,
     assign,
@@ -180,4 +187,5 @@ export default {
     dissipate,
     json,
     jsonezs,
+    encoder,
 };

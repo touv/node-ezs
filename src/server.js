@@ -36,7 +36,6 @@ function createServer(ezs, store) {
             } else if (url.match(/^\/[a-f0-9]{40}$/i) && method === 'POST') {
                 store.get(cmdid).then((cmds) => {
                     const decoder = new cbor.Decoder();
-                    const encoder = new cbor.Encoder();
                     let processor;
                     try {
                         const commands = JSONezs.parse(cmds);
@@ -53,7 +52,7 @@ function createServer(ezs, store) {
                         .pipe(decoder)
                         .pipe(processor)
                         .pipe(ezs.catch(console.error))
-                        .pipe(encoder)
+                        .pipe(ezs('encoder'))
                         .pipe(response);
                     request.resume();
                 });

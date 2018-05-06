@@ -6,13 +6,6 @@ import cbor from 'cbor';
 import mergeStream from 'merge-stream';
 import config from './config';
 
-function encoder(data, feed) {
-    if (this.isLast()) {
-        return feed.close();
-    }
-    return feed.send(cbor.encode(data));
-}
-
 const parseAddress = (srvr) => {
     if (typeof srvr !== 'string') {
         return null;
@@ -94,7 +87,7 @@ const connectTo = (ezs, serverOptions, funnel) =>
         if (handle) {
             const input = new PassThrough({ objectMode: true });
             input
-                .pipe(ezs(encoder))
+                .pipe(ezs('encoder'))
                 .pipe(handle);
             resolve(input);
         } else {
