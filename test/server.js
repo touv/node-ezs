@@ -120,6 +120,29 @@ describe('through a server', () => {
                 done();
             });
     });
+    it('with unknowed server in the pipeline', (done) => {
+        const commands = [
+            {
+                name: 'increment',
+                args: {
+                    step: 2,
+                },
+            },
+        ];
+        const servers = [
+            '127.0.0.0',
+        ];
+        const ten = new Decade();
+        ten
+            .pipe(ezs.dispatch(commands, servers))
+            .on('error', (error) => {
+                assert(error instanceof Error);
+                done();
+            })
+            .on('end', () => {
+                done();
+            });
+    });
 
     it('with unknowed command in the pipeline', (done) => {
         const commands = [

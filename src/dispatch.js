@@ -35,36 +35,40 @@ const registerTo = ({ hostname, port }, commands) =>
                 'Content-Length': requestBody.length,
             },
         };
-        http
-            .request(requestOptions, (res) => {
-                let requestResponse = '';
-                res.setEncoding('utf8');
-                res.on('error', error => reject(error));
-                res.on('data', (chunk) => {
-                    requestResponse += chunk;
-                });
-                res.on('end', () => {
-                    try {
-                        const result = JSON.parse(requestResponse);
-                        console.log(
-                            `Register ${hostname}:${port} with ${result}.`,
-                        );
-                        resolve({
-                            hostname,
-                            port,
-                            path: `/${result}`,
-                            method: 'POST',
-                            headers: {
-                                'Transfer-Encoding': 'chunked',
-                                'Content-Type': ' application/json',
-                            },
-                        });
-                    } catch (e) {
-                        reject(e);
-                    }
-                });
-            })
-            .write(requestBody);
+        const req = http.request(requestOptions, (res) => {
+            let requestResponse = '';
+            res.setEncoding('utf8');
+            res.on('error', (error) => {
+                reject(error);
+            });
+            res.on('data', (chunk) => {
+                requestResponse += chunk;
+            });
+            res.on('end', () => {
+                try {
+                    const result = JSON.parse(requestResponse);
+                    console.log(
+                        `Register ${hostname}:${port} with ${result}.`,
+                    );
+                    resolve({
+                        hostname,
+                        port,
+                        path: `/${result}`,
+                        method: 'POST',
+                        headers: {
+                            'Transfer-Encoding': 'chunked',
+                            'Content-Type': ' application/json',
+                        },
+                    });
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        });
+        req.on('error', (e) => {
+            reject(e);
+        });
+        req.write(requestBody);
     });
 
 const connectTo = (ezs, serverOptions, funnel) =>
@@ -73,25 +77,23 @@ const connectTo = (ezs, serverOptions, funnel) =>
             if (res.statusCode === 200) {
                 funnel.add(res);
             } else {
-                funnel.emit(
-                    'error',
-                    new Error(
-                        `${serverOptions.hostname}:${
+                funnel.emit('error', new Error(
+                    `${serverOptions.hostname}:${
                             serverOptions.port
                         } return ${res.statusCode}`,
-                    ),
-                );
+                ));
             }
         });
-        if (handle) {
+        handle.on('socket', () => {
             const input = new PassThrough({ objectMode: true });
             input
                 .pipe(ezs('encoder'))
                 .pipe(handle);
             resolve(input);
-        } else {
-            reject(new Error('Unable to connect to server'));
-        }
+        });
+        handle.on('error', (e) => {
+            reject(e);
+        });
     });
 
 export default class Dispatch extends Duplex {
@@ -127,6 +129,9 @@ export default class Dispatch extends Duplex {
         this.semaphore = true;
         this.lastIndex = 0;
         this.funnel = mergeStream();
+        this.funnel.on('error', (e) => {
+            this.emit('error', e);
+        });
         this.funnel.pipe(this.tubin);
         this.ezs = ezs;
     }
@@ -138,13 +143,12 @@ export default class Dispatch extends Duplex {
             pMap(self.servers, server =>
                 registerTo(server, self.commands),
             ).then((workers) => {
-                pMap(workers, worker => connectTo(self.ezs, worker, self.funnel)).then(
-                    (handles) => {
+                pMap(workers, worker => connectTo(self.ezs, worker, self.funnel))
+                    .then((handles) => {
                         self.handles = handles;
                         self.balance(chunk, encoding, callback);
-                    },
-                );
-            });
+                    }, callback);
+            }, callback);
         } else {
             self.balance(chunk, encoding, callback);
         }
