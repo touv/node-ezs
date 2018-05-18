@@ -84,12 +84,9 @@ function createCluster(ezs, store) {
         for (let i = 0; i < numCPUs; i += 1) {
             cluster.fork();
         }
-
-        /*
-        cluster.on('exit', (worker, code, signal) => {
-            console.log(`worker ${worker.process.pid} died`);
+        cluster.on('exit', () => {
+            cluster.fork();
         });
-        */
     } else {
         createServer(ezs, store);
     }
