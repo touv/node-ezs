@@ -7,6 +7,7 @@ import File from './file';
 import Output from './output';
 import Catcher from './catcher';
 import Plugins from './plugins';
+import Parameter from './parameter';
 import Statement from './statement';
 import IsolatedStore from './isolated-store';
 import SharedStore from './shared-store';
@@ -16,6 +17,7 @@ import Server from './server';
 const ezs = (name, opts) => new Engine(ezs, Statement.get(ezs, name, opts), opts);
 const ezsPath = [process.cwd()];
 
+ezs.config = (name, opts) => Parameter.set(ezs, name, opts);
 ezs.pipeline = (commands, options) => new Pipeline(ezs, commands, options);
 ezs.dispatch = (commands, options) => new Dispatch(ezs, commands, options);
 ezs.all = (name, opts) => new Engine(ezs, Statement.get(ezs, name, opts), opts);
