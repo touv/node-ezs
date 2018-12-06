@@ -80,7 +80,7 @@ describe('Build a pipeline', () => {
                 done();
             });
     });
-    it('with error(throw)', (done) => {
+    it('with sync error(throw)', (done) => {
         const ten = new Decade();
         ten
             .pipe(ezs(() => {
@@ -94,6 +94,7 @@ describe('Build a pipeline', () => {
                 throw new Error('no data should be received')
             });
     });
+    // https://bytearcher.com/articles/why-asynchronous-exceptions-are-uncatchable/
     it.skip('with async error(throw)', (done) => {
         const ten = new Decade();
         ten
@@ -115,6 +116,18 @@ describe('Build a pipeline', () => {
             })
             .on('end', () => {
                 done();
+            });
+    });
+    it('with async/sync error(stop)', (done) => {
+        const ten = new Decade();
+        ten
+            .pipe(ezs('plouf'))
+            .on('error', error => {
+                assert.equal(error.message.split('\n')[0], 'Processing item #1 failed with Error: Plouf!')
+                done();
+            })
+            .on('data', (chunk) => {
+                throw new Error('no data should be received')
             });
     });
     it('catch & ignore error', (done) => {
@@ -577,7 +590,7 @@ describe('Build a pipeline', () => {
                 assert.strictEqual(res, 90);
                 done();
             });
-    });
+    }).timeout(5000);
     it('with input break during the executionpipeline', (done) => {
         const commands = `
             [use]
@@ -598,7 +611,7 @@ describe('Build a pipeline', () => {
             .pipe(ezs.fromString(commands))
             .on('data', (chunk) => {
                 if (chunk === 4) {
-                    pass.write(null);
+                    pass.end();
                 } else if (chunk < 4) {
                     res += Number(chunk);
                 }
@@ -867,7 +880,7 @@ describe('Build a pipeline', () => {
         done();
     });
 
-    it('with shift statement in the  pipeline', (done) => {
+    it('with shift statement in the pipeline', (done) => {
         const ten = new Decade();
         const expr = new Expression('self()');
         ten

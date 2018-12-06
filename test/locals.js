@@ -47,13 +47,17 @@ function stepper(data, feed) {
 
 function slow(data, feed) {
     if (this.isLast()) {
-        return feed.send(data);
+        return setTimeout(() => {
+            return feed.close();
+        }, 1);
     }
-    feed.write(data);
     return setTimeout(() => {
         feed.write(data);
-        feed.end();
-    }, 100);
+        setTimeout(() => {
+            feed.write(data);
+            feed.end();
+        }, 200);
+    }, 200);
 }
 
 function bad(data, feed) {
@@ -96,6 +100,7 @@ function beat(data, feed) {
     }, 1);
 }
 
+// WARNING : https://bytearcher.com/articles/why-asynchronous-exceptions-are-uncatchable/
 function badaboum(data, feed) {
     if (this.isLast()) {
         return feed.send(data);
@@ -104,6 +109,17 @@ function badaboum(data, feed) {
         throw new Error('Badaboum!');
     }, 1);
 }
+
+function plouf(data, feed) {
+    if (this.isLast()) {
+        return feed.send(data);
+    }
+    return setTimeout(() => {
+        feed.stop(new Error('Plouf!'));
+    }, 1);
+}
+
+
 
 
 module.exports = {
@@ -118,5 +134,6 @@ module.exports = {
     beat,
     ignoreMe,
     badaboum,
+    plouf,
 };
 

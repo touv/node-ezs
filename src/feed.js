@@ -1,7 +1,8 @@
 export default class Feed {
-    constructor(push, done) {
+    constructor(push, done, stop, index) {
         this.push = push;
         this.done = done;
+        this.stop = stop;
     }
     write(something) {
         if (something !== undefined) {
@@ -18,5 +19,8 @@ export default class Feed {
     close() {
         this.write(null);
         this.end();
+    }
+    stop(withError) {
+        this.stop(withError);
     }
 }
