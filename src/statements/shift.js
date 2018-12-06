@@ -4,7 +4,7 @@
  * @returns {Object}
  */
 export default function shift(data, feed) {
-    feed.write(data);
+    feed.send(data);
     feed.close();
 }
 
