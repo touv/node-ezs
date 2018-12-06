@@ -52,6 +52,9 @@ Output object is an object with few methods :
 -   output.end()
 -   output.send(something)
 -   output.close()
+-   output.stop(withAnError)
+
+With an sync statement, you can break the pipe  with throw but with an async statement, you should use `stop(with An Error)` instead throw.
 
 ### statement modes
 
@@ -257,12 +260,12 @@ Take `Object` and add new field
 
 **Parameters**
 
--   `data`  
--   `feed`  
+-   `data`
+-   `feed`
 -   `path` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** path of the new field
 -   `value` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** value of the new field
 
-Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** 
+Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)**
 
 ## concat
 
@@ -270,13 +273,13 @@ Take all `String`, concat them and thow just one
 
 **Parameters**
 
--   `data`  
--   `feed`  
+-   `data`
+-   `feed`
 -   `beginWith` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Add value at the begin
 -   `joinWith` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** use value to join 2 chunk
 -   `endWith` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** Add value at the end
 
-Returns **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** 
+Returns **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)**
 
 ## debug
 
@@ -284,13 +287,13 @@ Take `Object` , print it and throw the same object
 
 **Parameters**
 
--   `data`  
--   `feed`  
+-   `data`
+-   `feed`
 -   `level` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** console level : log or error (optional, default `log`)
 -   `text` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** text before the dump (optional, default `valueOf`)
 -   `path` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** path of field to print
 
-Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** 
+Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)**
 
 ## env
 
@@ -300,12 +303,12 @@ new environment field
 
 **Parameters**
 
--   `data`  
--   `feed`  
+-   `data`
+-   `feed`
 -   `path` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** path of the new field
 -   `value` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** value of the new field
 
-Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** 
+Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)**
 
 ## extract
 
@@ -313,11 +316,11 @@ Take `Object` and throw each value of fields
 
 **Parameters**
 
--   `data`  
--   `feed`  
+-   `data`
+-   `feed`
 -   `path` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** path of field to extract
 
-Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** 
+Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)**
 
 ## json
 
@@ -325,10 +328,10 @@ Take all `String`, throw `Object` builded by JSON.parse
 
 **Parameters**
 
--   `data`  
--   `feed`  
+-   `data`
+-   `feed`
 
-Returns **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** 
+Returns **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)**
 
 ## keep
 
@@ -337,11 +340,11 @@ spefici fields
 
 **Parameters**
 
--   `data`  
--   `feed`  
+-   `data`
+-   `feed`
 -   `path` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** path of field to keep
 
-Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** 
+Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)**
 
 ## pack
 
@@ -349,10 +352,10 @@ Take all `Object`, throw encoded `String`
 
 **Parameters**
 
--   `data`  
--   `feed`  
+-   `data`
+-   `feed`
 
-Returns **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** 
+Returns **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)**
 
 ## replace
 
@@ -360,12 +363,12 @@ Take `Object` and create a new object with some fields
 
 **Parameters**
 
--   `data`  
--   `feed`  
+-   `data`
+-   `feed`
 -   `path` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** path of the new field
 -   `value` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** value of the new field
 
-Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** 
+Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)**
 
 ## shift
 
@@ -373,10 +376,10 @@ Take the first `Object` and close the feed
 
 **Parameters**
 
--   `data`  
--   `feed`  
+-   `data`
+-   `feed`
 
-Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** 
+Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)**
 
 ## shuffle
 
@@ -384,11 +387,11 @@ Take `Object`, shuffle data of the whole object or only some fields specified by
 
 **Parameters**
 
--   `data`  
--   `feed`  
+-   `data`
+-   `feed`
 -   `path` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** path of field to shuffle
 
-Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** 
+Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)**
 
 ## transit
 
@@ -396,10 +399,10 @@ Take `Object` and throw the same object
 
 **Parameters**
 
--   `data`  
--   `feed`  
+-   `data`
+-   `feed`
 
-Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** 
+Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)**
 
 ## unpack
 
@@ -407,10 +410,10 @@ Take `String` and throw `Object` builded by JSON.parse on each line
 
 **Parameters**
 
--   `data`  
--   `feed`  
+-   `data`
+-   `feed`
 
-Returns **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** 
+Returns **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)**
 
 # Related projects
 

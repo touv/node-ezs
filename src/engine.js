@@ -50,7 +50,7 @@ export default class Engine extends SafeTransform {
             }
             return this.push(data);
         };
-        const feed = new Feed(push, done, stop, this.index, this.scope);
+        const feed = new Feed(push, done, stop);
         try {
             this.scope.isFirst = () => (this.index === 1);
             this.scope.getIndex = () => this.index;

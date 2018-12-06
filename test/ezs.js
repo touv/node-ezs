@@ -596,7 +596,7 @@ describe('Build a pipeline', () => {
             [use]
             plugin = test/locals
 
-            [slow]
+            [transit]
 
         `;
         let res = 0;
@@ -607,7 +607,37 @@ describe('Build a pipeline', () => {
                 output.send(input);
             }))
             .pipe(pass)
-            .on('error', console.error) // Error [ERR_STREAM_WRITE_AFTER_END]: write after end
+            .pipe(ezs.fromString(commands))
+            .on('data', (chunk) => {
+                if (chunk === 4) {
+                    pass.end();
+                } else if (chunk < 4) {
+                    res += Number(chunk);
+                }
+            })
+            .on('end', () => {
+                assert.strictEqual(res, 6);
+                done();
+            });
+        pass.resume();
+    });
+    it('with input break during the executionpipeline (async))', (done) => {
+        const commands = `
+            [use]
+            plugin = test/locals
+
+            [slow]
+            time = 2
+
+        `;
+        let res = 0;
+        const pass = new PassThrough({ objectMode: true });
+        const ten = new Decade();
+        ten
+            .pipe(ezs((input, output) => {
+                output.send(input);
+            }))
+            .pipe(pass)
             .pipe(ezs.fromString(commands))
             .on('data', (chunk) => {
                 if (chunk === 4) {

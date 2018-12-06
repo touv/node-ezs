@@ -46,6 +46,7 @@ function stepper(data, feed) {
 }
 
 function slow(data, feed) {
+    const time2sleep = Number(this.getParam('time', 200));
     if (this.isLast()) {
         return setTimeout(() => {
             return feed.close();
@@ -56,8 +57,8 @@ function slow(data, feed) {
         setTimeout(() => {
             feed.write(data);
             feed.end();
-        }, 200);
-    }, 200);
+        }, time2sleep);
+    }, time2sleep);
 }
 
 function bad(data, feed) {

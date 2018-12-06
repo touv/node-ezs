@@ -1,11 +1,13 @@
 export default class Feed {
-    constructor(push, done, stop, index) {
+    constructor(push, done, stop) {
         this.push = push;
         this.done = done;
         this.stop = stop;
     }
     write(something) {
-        if (something !== undefined) {
+        if (something === null) {
+            this.close();
+        } else if (something !== undefined) {
             this.push(something);
         }
     }
@@ -17,8 +19,8 @@ export default class Feed {
         this.end();
     }
     close() {
-        this.write(null);
-        this.end();
+        this.push(null);
+        this.done();
     }
     stop(withError) {
         this.stop(withError);
