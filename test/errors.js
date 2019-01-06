@@ -81,6 +81,20 @@ describe('Build a pipeline', () => {
                 throw new Error('no data should be received')
             });
     });
+    it('with error in the flow (async)', (done) => {
+        const ten = new Decade();
+        let counter = 0;
+        ten
+            .pipe(ezs('plaf'))
+            .on('data', (chunk) => {
+                counter += chunk;
+            })
+            .on('error', error => {
+                assert.equal(error.message.split('\n')[0], 'Processing item #7 failed with Error: Plaf!')
+                assert.equal(21, counter);
+                done();
+            });
+    });
     it('catch & ignore error', (done) => {
         let counter = 0;
         const ten = new Decade();

@@ -120,6 +120,19 @@ function plouf(data, feed) {
     }, 1);
 }
 
+function plaf(data, feed) {
+    if (this.isLast()) {
+        return feed.send(data);
+    }
+    return setTimeout(() => {
+        if (data === 7) {
+            feed.stop(new Error('Plaf!'));
+        } else {
+            feed.send(data);
+        }
+    }, 1);
+}
+
 function splish(data, feed) {
     if (this.isLast()) {
         return feed.send(data);
@@ -161,6 +174,7 @@ module.exports = {
     ignoreMe,
     badaboum,
     plouf,
+    plaf,
     splish,
     splash
 };
