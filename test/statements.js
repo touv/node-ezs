@@ -52,4 +52,33 @@ describe('statements', () => {
                 done();
             });
     });
+    it('harvest#1', (done) => {
+        const res = [];
+        from([
+            'https://raw.githubusercontent.com/touv/node-ezs/master/package.json',
+        ])
+            .pipe(ezs('harvest'))
+            .on('data', (chunk) => {
+                assert(Buffer.isBuffer(chunk));
+                assert(JSON.parse(chunk).name === 'ezs');
+            })
+            .on('end', () => {
+                done();
+            });
+    });
+    it('harvest#2', (done) => {
+        const res = [];
+        let check = true;
+        from([
+            'https://raw.githubusercontent.com/touv/node-ezs/master/package.no_found',
+        ])
+            .pipe(ezs('harvest'))
+            .on('data', (chunk) => {
+                check = false;
+            })
+            .on('end', () => {
+                assert.ok(check);
+                done();
+            });
+    });
 });

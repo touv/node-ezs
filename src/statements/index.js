@@ -13,6 +13,7 @@ import transit from './transit';
 import shuffle from './shuffle';
 import env from './env';
 import partition from './partition';
+import harvest from './harvest';
 
 export default {
     extract,
@@ -30,4 +31,5 @@ export default {
     shuffle,
     env,
     partition,
+    harvest,
 };
