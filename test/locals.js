@@ -2,14 +2,6 @@ function plus1(data, feed) {
     feed.send(data + 1);
 }
 
-function boum(data, feed) {
-    if (this.isLast()) {
-        return feed.send(data);
-    }
-    return feed.send(new Error('Boum!'));
-}
-
-
 function increment(data, feed) {
     if (!this.isLast()) {
         const step = this.getParam('step', 1);
@@ -63,7 +55,7 @@ function slow(data, feed) {
 
 function bad(data, feed) {
     if (this.isLast()) {
-        return feed.send(data);
+        return feed.close();
     }
     feed.end();
     return feed.write(data);
@@ -93,7 +85,7 @@ function ignoreMe(data, feed) {
 
 function beat(data, feed) {
     if (this.isLast()) {
-        return feed.send(data);
+        return feed.close();
     }
     return setTimeout(() => {
         feed.write({ beat: 1 });
@@ -101,10 +93,17 @@ function beat(data, feed) {
     }, 1);
 }
 
+function boum(data, feed) {
+    if (this.isLast()) {
+        return feed.close();
+    }
+    return feed.send(new Error('Boum!'));
+}
+
 // WARNING : https://bytearcher.com/articles/why-asynchronous-exceptions-are-uncatchable/
 function badaboum(data, feed) {
     if (this.isLast()) {
-        return feed.send(data);
+        return feed.close();
     }
     return setTimeout(() => {
         throw new Error('Badaboum!');
@@ -113,16 +112,16 @@ function badaboum(data, feed) {
 
 function plouf(data, feed) {
     if (this.isLast()) {
-        return feed.send(data);
+        return feed.close();
     }
     return setTimeout(() => {
-        feed.stop(new Error('Plouf!'));
+        feed.stop(new Error(`Plouf #${this.getIndex()}`));
     }, 1);
 }
 
 function plaf(data, feed) {
     if (this.isLast()) {
-        return feed.send(data);
+        return feed.close();
     }
     return setTimeout(() => {
         if (data === 7) {
@@ -135,7 +134,7 @@ function plaf(data, feed) {
 
 function splish(data, feed) {
     if (this.isLast()) {
-        return feed.send(data);
+        return feed.close();
     }
     const p = new Promise((resolve, reject) => {
         resolve(data);
@@ -147,7 +146,7 @@ function splish(data, feed) {
 
 function splash(data, feed) {
     if (this.isLast()) {
-        return feed.send(data);
+        return feed.close();
     }
     const p = new Promise((resolve, reject) => {
         reject(data);
@@ -176,6 +175,6 @@ module.exports = {
     plouf,
     plaf,
     splish,
-    splash
+    splash,
 };
 

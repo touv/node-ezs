@@ -24,9 +24,13 @@ export default class Engine extends SafeTransform {
         this.scope = {};
         this.ezs = ezs;
         this.environment = environment || {};
+        this.nullWasSent = false;
     }
 
     _transform(chunk, encoding, done) {
+        if (this.nullWasSent) {
+            return done();
+        }
         this.index += 1;
         if (chunk instanceof Error) {
             this.push(chunk);
@@ -41,19 +45,23 @@ export default class Engine extends SafeTransform {
     }
 
     execWith(chunk, done) {
-        const stop = (error) => {
-            this.emit('error', createErrorWith(error, this.index));
+        const currentIndex = this.index;
+        const error = (error) => {
+            this.emit('error', createErrorWith(error, currentIndex));
         };
         const push = (data) => {
             if (data instanceof Error) {
-                return this.push(createErrorWith(data, this.index));
+                return this.push(createErrorWith(data, currentIndex));
+            }
+            if (data === null) {
+                this.nullWasSent = true;
             }
             return this.push(data);
         };
-        const feed = new Feed(push, done, stop);
+        const feed = new Feed(push, done, error);
         try {
-            this.scope.isFirst = () => (this.index === 1);
-            this.scope.getIndex = () => this.index;
+            this.scope.isFirst = () => (currentIndex === 1);
+            this.scope.getIndex = () => currentIndex;
             this.scope.isLast = () => (chunk === null);
             this.scope.getEnv = (name) => name === undefined ? this.environment : this.environment[name];
             this.scope.ezs = this.ezs;
@@ -67,11 +75,11 @@ export default class Engine extends SafeTransform {
                 return defval;
             };
             Promise.resolve(this.func.call(this.scope, chunk, feed)).catch(e => {
-                stop(e);
+                error(e);
                 done();
             });
         } catch (e) {
-            stop(e);
+            error(e);
             done();
         }
     }
