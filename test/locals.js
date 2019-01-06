@@ -120,6 +120,31 @@ function plouf(data, feed) {
     }, 1);
 }
 
+function splish(data, feed) {
+    if (this.isLast()) {
+        return feed.send(data);
+    }
+    const p = new Promise((resolve, reject) => {
+        resolve(data);
+    })
+    p
+        .then(d => feed.send(d))
+        .catch(e => feed.end());
+}
+
+function splash(data, feed) {
+    if (this.isLast()) {
+        return feed.send(data);
+    }
+    const p = new Promise((resolve, reject) => {
+        reject(data);
+    })
+    p
+        .then(d => feed.send(d))
+        .catch(() => feed.end());
+    ;
+}
+
 
 
 
@@ -136,5 +161,7 @@ module.exports = {
     ignoreMe,
     badaboum,
     plouf,
+    splish,
+    splash
 };
 
