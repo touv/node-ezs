@@ -51,7 +51,6 @@
         "autocast": "~0.0.4",
         "debug": "~4.1.1",
         "deep-object-diff": "~1.1.0",
-        "fetch-with-proxy": "~1.1.0",
         "filtrex": "~0.5.4",
         "fs-extra": "~7.0.1",
         "isomorphic-fetch": "~2.2.1",

@@ -51,6 +51,7 @@ describe('statements', () => {
                 done();
             });
     });
+    /* Not yet ready
     it('harvest#1', (done) => {
         from([
             'https://raw.githubusercontent.com/touv/node-ezs/master/package.json',
@@ -78,4 +79,5 @@ describe('statements', () => {
                 done();
             });
     });
+    */
 });

@@ -1,11 +1,7 @@
+/*
 import fetch from 'fetch-with-proxy';
 import MultiStream from 'multistream';
 import { DEBUG } from '../constants';
-/**
- * Take URL(s) and throw content behind the URL
- *
- * @returns {Object}
- */
 export default function harvest(data, feed) {
     if (this.isLast()) {
         return feed.close();
@@ -24,3 +20,4 @@ export default function harvest(data, feed) {
             DEBUG('The server has detected an error while gathering streams', error);
         });
 }
+*/

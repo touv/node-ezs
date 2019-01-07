@@ -250,26 +250,24 @@ Launch a cluster for ezs.dispatch
     -   [Parameters](#parameters-3)
 -   [extract](#extract)
     -   [Parameters](#parameters-4)
--   [harvest](#harvest)
-    -   [Parameters](#parameters-5)
 -   [json](#json)
-    -   [Parameters](#parameters-6)
+    -   [Parameters](#parameters-5)
 -   [keep](#keep)
-    -   [Parameters](#parameters-7)
+    -   [Parameters](#parameters-6)
 -   [pack](#pack)
-    -   [Parameters](#parameters-8)
+    -   [Parameters](#parameters-7)
 -   [partition](#partition)
-    -   [Parameters](#parameters-9)
+    -   [Parameters](#parameters-8)
 -   [replace](#replace)
-    -   [Parameters](#parameters-10)
+    -   [Parameters](#parameters-9)
 -   [shift](#shift)
-    -   [Parameters](#parameters-11)
+    -   [Parameters](#parameters-10)
 -   [shuffle](#shuffle)
-    -   [Parameters](#parameters-12)
+    -   [Parameters](#parameters-11)
 -   [transit](#transit)
-    -   [Parameters](#parameters-13)
+    -   [Parameters](#parameters-12)
 -   [unpack](#unpack)
-    -   [Parameters](#parameters-14)
+    -   [Parameters](#parameters-13)
 
 ## assign
 
@@ -336,17 +334,6 @@ Take `Object` and throw each value of fields
 -   `data`  
 -   `feed`  
 -   `path` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** path of field to extract
-
-Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** 
-
-## harvest
-
-Take URL(s) and throw content behind the URL
-
-### Parameters
-
--   `data`  
--   `feed`  
 
 Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** 
 
