@@ -250,13 +250,13 @@ Launch a cluster for ezs.dispatch
     -   [Parameters](#parameters-3)
 -   [extract](#extract)
     -   [Parameters](#parameters-4)
--   [json](#json)
-    -   [Parameters](#parameters-5)
--   [keep](#keep)
-    -   [Parameters](#parameters-6)
--   [pack](#pack)
-    -   [Parameters](#parameters-7)
 -   [partition](#partition)
+    -   [Parameters](#parameters-5)
+-   [json](#json)
+    -   [Parameters](#parameters-6)
+-   [keep](#keep)
+    -   [Parameters](#parameters-7)
+-   [pack](#pack)
     -   [Parameters](#parameters-8)
 -   [replace](#replace)
     -   [Parameters](#parameters-9)
@@ -266,8 +266,10 @@ Launch a cluster for ezs.dispatch
     -   [Parameters](#parameters-11)
 -   [transit](#transit)
     -   [Parameters](#parameters-12)
--   [unpack](#unpack)
+-   [ungroup](#ungroup)
     -   [Parameters](#parameters-13)
+-   [unpack](#unpack)
+    -   [Parameters](#parameters-14)
 
 ## assign
 
@@ -337,6 +339,18 @@ Take `Object` and throw each value of fields
 
 Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** 
 
+## partition
+
+Take all `chunk`, and throw array of chunks
+
+### Parameters
+
+-   `data`  
+-   `feed`  
+-   `size` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Size of each partition
+
+Returns **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** 
+
 ## json
 
 Take all `String`, throw `Object` builded by JSON.parse
@@ -369,18 +383,6 @@ Take all `Object`, throw encoded `String`
 
 -   `data`  
 -   `feed`  
-
-Returns **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** 
-
-## partition
-
-Take all `chunk`, and throw array of chunks
-
-### Parameters
-
--   `data`  
--   `feed`  
--   `size` **[Number](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Number)?** Size of each partition
 
 Returns **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** 
 
@@ -430,6 +432,17 @@ Take `Object` and throw the same object
 -   `feed`  
 
 Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** 
+
+## ungroup
+
+Take all `chunk`, and throw each item of chunks
+
+### Parameters
+
+-   `data`  
+-   `feed`  
+
+Returns **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** 
 
 ## unpack
 

@@ -13,6 +13,7 @@ import transit from './transit';
 import shuffle from './shuffle';
 import env from './env';
 import group from './group';
+import ungroup from './ungroup';
 
 export default {
     extract,
@@ -30,4 +31,5 @@ export default {
     shuffle,
     env,
     group,
+    ungroup,
 };
