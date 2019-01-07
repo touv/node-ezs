@@ -1,10 +1,9 @@
-export default class Store  {
-
-    constructor () {
+export default class Store {
+    constructor() {
     }
 
     get(key) {
-        return
+
     }
 
     set(key, value) {
@@ -15,7 +14,7 @@ export default class Store  {
     }
 
     isEmpty(value) {
-        return (value === undefined || value === null)
+        return (value === undefined || value === null);
     }
 
     pipe(stream) {

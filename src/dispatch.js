@@ -29,67 +29,66 @@ const agent = new http.Agent({
     timeout: 0,
 });
 
-const registerTo = (ezs, { hostname, port }, commands) =>
-    new Promise((resolve, reject) => {
-        const requestOptions = {
-            hostname,
-            port,
-            path: '/',
-            method: 'POST',
-            headers: {
-                'Transfer-Encoding': 'chunked',
-                'Content-Type': 'application/json',
-                'X-Parameter': Parameter.pack(),
-            },
-            agent,
-        };
-        DEBUG(`Try to connect to server ${hostname}:${port}`);
-        const req = http.request(requestOptions, (res) => {
-            let requestResponse = '';
-            res.setEncoding('utf8');
-            res.on('error', (error) => {
-                reject(error);
-            });
-            res.on('data', (chunk) => {
-                requestResponse += chunk;
-            });
-            res.on('end', () => {
-                try {
-                    const result = JSON.parse(requestResponse);
-                    DEBUG(
-                        `The server has registered all statements with ID: ${result}`,
-                    );
-                    resolve({
-                        hostname,
-                        port,
-                        path: `/${result}`,
-                        method: 'POST',
-                        headers: {
-                            'Transfer-Encoding': 'chunked',
-                            'Content-Type': ' application/json',
-                        },
-                        agent,
-                    });
-                } catch (e) {
-                    reject(e);
-                }
-            });
+const registerTo = (ezs, { hostname, port }, commands) => new Promise((resolve, reject) => {
+    const requestOptions = {
+        hostname,
+        port,
+        path: '/',
+        method: 'POST',
+        headers: {
+            'Transfer-Encoding': 'chunked',
+            'Content-Type': 'application/json',
+            'X-Parameter': Parameter.pack(),
+        },
+        agent,
+    };
+    DEBUG(`Try to connect to server ${hostname}:${port}`);
+    const req = http.request(requestOptions, (res) => {
+        let requestResponse = '';
+        res.setEncoding('utf8');
+        res.on('error', (error) => {
+            reject(error);
         });
-        req.on('error', (e) => {
-            reject(e);
+        res.on('data', (chunk) => {
+            requestResponse += chunk;
         });
-        const input = new PassThrough(ezs.objectMode());
-        input
-            .pipe(ezs('pack'))
-            .pipe(ezs.compress())
-            .pipe(req);
-        commands.forEach(command => input.write(command));
-        input.end();
+        res.on('end', () => {
+            try {
+                const result = JSON.parse(requestResponse);
+                DEBUG(
+                    `The server has registered all statements with ID: ${result}`,
+                );
+                resolve({
+                    hostname,
+                    port,
+                    path: `/${result}`,
+                    method: 'POST',
+                    headers: {
+                        'Transfer-Encoding': 'chunked',
+                        'Content-Type': ' application/json',
+                    },
+                    agent,
+                });
+            } catch (e) {
+                reject(e);
+            }
+        });
     });
+    req.on('error', (e) => {
+        reject(e);
+    });
+    const input = new PassThrough(ezs.objectMode());
+    input
+        .pipe(ezs('pack'))
+        .pipe(ezs.compress())
+        .pipe(req);
+    commands.forEach(command => input.write(command));
+    input.end();
+});
 
 const duplexer = (ezs, environment, onerror) => (serverOptions, index) => {
-    const opts = { 
-        ...serverOptions, 
+    const opts = {
+        ...serverOptions,
         timeout: 0,
         headers: environment,
     };
@@ -111,13 +110,13 @@ const duplexer = (ezs, environment, onerror) => (serverOptions, index) => {
         }
     });
 
-    handle.on('error' , (e) => {
+    handle.on('error', (e) => {
         onerror(new Error(
             `${hostname || '?'}:${port || '?'}#${index} return ${e.message}`,
         ));
         output.end();
         handle.abort();
-    })
+    });
 
     handle.setNoDelay(false);
 
@@ -137,9 +136,7 @@ export default class Dispatch extends Duplex {
 
         this.tubin = new PassThrough(ezs.objectMode());
         this.tubout = this.tubin
-            .pipe(ezs('transit'))
-        ;
-
+            .pipe(ezs('transit'));
         this.on('finish', () => {
             this.handles.forEach((handle, index) => {
                 handle[0].end();
@@ -168,7 +165,7 @@ export default class Dispatch extends Duplex {
             .compact()
             .uniq()
             .map(parseAddress)
-            .map(s => Array(ns).fill(s))  // multiple each line
+            .map(s => Array(ns).fill(s)) // multiple each line
             .value()
             .reduce((a, b) => a.concat(b), []); // flatten all
         this.commands = commands;
@@ -181,11 +178,9 @@ export default class Dispatch extends Duplex {
     _write(chunk, encoding, callback) {
         if (this.semaphore) {
             this.semaphore = false;
-            pMap(this.servers, server =>
-                registerTo(this.ezs, server, this.commands).catch((e) => {
-                    DEBUG(`Unable to regsister commands with the server: ${server}`, e);
-                }),
-            ).then((workers) => {
+            pMap(this.servers, server => registerTo(this.ezs, server, this.commands).catch((e) => {
+                DEBUG(`Unable to regsister commands with the server: ${server}`, e);
+            })).then((workers) => {
                 this.handles = workers.map(duplexer(this.ezs, this.environment, (e) => {
                     this.emit('error', e);
                 }));

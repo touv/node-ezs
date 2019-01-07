@@ -41,7 +41,7 @@ export default class SharedStore extends Store {
         return new Promise((resolve) => {
             memored.size((err, size) => {
                 if (err) {
-                    reject(err)
+                    reject(err);
                 } else {
                     resolve(size);
                 }
@@ -49,4 +49,3 @@ export default class SharedStore extends Store {
         });
     }
 }
-

@@ -2,7 +2,7 @@ import assert from 'assert';
 import Dir from 'path';
 import from from 'from';
 import fs from 'fs';
-import { Readable, PassThrough }  from 'stream';
+import { Readable, PassThrough } from 'stream';
 import ezs from '../src';
 import Expression from '../src/expression';
 
@@ -18,6 +18,7 @@ class Decade extends Readable {
         super({ objectMode: true });
         this.i = 0;
     }
+
     _read() {
         this.i += 1;
         if (this.i >= 10) {
@@ -35,12 +36,12 @@ describe('Catch error in a pipeline', () => {
             .pipe(ezs(() => {
                 throw new Error('Bang!');
             }))
-            .on('error', error => {
-                assert.equal(error.message.split('\n')[0], 'Processing item #1 failed with Error: Bang!')
+            .on('error', (error) => {
+                assert.equal(error.message.split('\n')[0], 'Processing item #1 failed with Error: Bang!');
                 done();
             })
             .on('data', (chunk) => {
-                throw new Error('no data should be received')
+                throw new Error('no data should be received');
             });
     });
     // https://bytearcher.com/articles/why-asynchronous-exceptions-are-uncatchable/
@@ -49,12 +50,12 @@ describe('Catch error in a pipeline', () => {
         const ten = new Decade();
         ten
             .pipe(ezs('badaboum'))
-            .on('error', error => {
-                assert.equal(error.message.split('\n')[0], 'Processing item #1 failed with Error: Badaboum!')
+            .on('error', (error) => {
+                assert.equal(error.message.split('\n')[0], 'Processing item #1 failed with Error: Badaboum!');
                 done();
             })
             .on('data', (chunk) => {
-                throw new Error('no data should be received')
+                throw new Error('no data should be received');
             });
     });
     it('with errors in every chunk processed by a synchronous statement (send)', (done) => {
@@ -74,19 +75,18 @@ describe('Catch error in a pipeline', () => {
         let errmsg = '';
         ten
             .pipe(ezs('plouf'))
-            .on('error', error => {
+            .on('error', (error) => {
                 counter += 1;
                 errmsg = error.message.split('\n')[0];
             })
             .on('data', (chunk) => {
-                throw new Error('no data should be received')
+                throw new Error('no data should be received');
             })
             .on('end', () => {
                 assert.equal(1, counter);
                 assert.equal(errmsg, 'Processing item #1 failed with Error: Plouf #1');
                 done();
             });
-
     });
     it('with one error in one chunk processed by a asynchronous statement (stop)', (done) => {
         const ten = new Decade();
@@ -97,12 +97,12 @@ describe('Catch error in a pipeline', () => {
             .on('data', (chunk) => {
                 counter += chunk;
             })
-            .on('error', error => {
+            .on('error', (error) => {
                 errmsg = error.message.split('\n')[0];
             })
             .on('end', () => {
                 assert.equal(21, counter);
-                assert.equal(errmsg, 'Processing item #7 failed with Error: Plaf!')
+                assert.equal(errmsg, 'Processing item #7 failed with Error: Plaf!');
                 done();
             });
     });

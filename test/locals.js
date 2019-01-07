@@ -40,9 +40,7 @@ function stepper(data, feed) {
 function slow(data, feed) {
     const time2sleep = Number(this.getParam('time', 200));
     if (this.isLast()) {
-        return setTimeout(() => {
-            return feed.close();
-        }, 1);
+        return setTimeout(() => feed.close(), 1);
     }
     return setTimeout(() => {
         feed.write(data);
@@ -138,7 +136,7 @@ function splish(data, feed) {
     }
     const p = new Promise((resolve, reject) => {
         resolve(data);
-    })
+    });
     p
         .then(d => feed.send(d))
         .catch(e => feed.end());
@@ -150,14 +148,11 @@ function splash(data, feed) {
     }
     const p = new Promise((resolve, reject) => {
         reject(data);
-    })
+    });
     p
         .then(d => feed.send(d))
         .catch(() => feed.end());
-    ;
 }
-
-
 
 
 module.exports = {
@@ -177,4 +172,3 @@ module.exports = {
     splish,
     splash,
 };
-

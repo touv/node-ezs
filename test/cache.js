@@ -2,7 +2,7 @@ import assert from 'assert';
 import path from 'path';
 import os from 'os';
 import fs from 'fs';
-import { Readable }  from 'stream';
+import { Readable } from 'stream';
 import ezs from '../src';
 
 class Decade extends Readable {
@@ -10,6 +10,7 @@ class Decade extends Readable {
         super({ objectMode: true });
         this.i = 0;
     }
+
     _read() {
         this.i += 1;
         if (this.i >= 10) {
@@ -62,8 +63,7 @@ describe('cache - second call (buffer)', () => {
                 .on('end', () => {
                     assert.strictEqual(res, '0123456789');
                     done();
-                })
-
+                });
         } else {
             assert(false);
         }
@@ -107,7 +107,6 @@ describe('cache - second call (object)', () => {
                     assert.strictEqual(res, 45);
                     done();
                 });
-
         } else {
             assert(false);
         }
@@ -141,4 +140,3 @@ describe('disk - second load from disk', () => {
             });
     });
 });
-

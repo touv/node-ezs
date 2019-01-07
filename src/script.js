@@ -39,7 +39,7 @@ export default function Script(commands) {
                 const matches1 = matches0[1].match(/(\w+)\?(\w+)/);
                 let mode = M_NORMAL;
                 let name = 'debug';
-                let test = '';
+                const test = '';
                 if (Array.isArray(matches1)) {
                     name = matches1[1];
                     mode = matches1[2];

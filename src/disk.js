@@ -1,8 +1,8 @@
 import path from 'path';
 import fs from 'fs-extra';
 import MultiStream from 'multistream';
-import { DEBUG, PORT, NSHARDS } from './constants';
 import { Writable, Readable } from 'stream';
+import { DEBUG, PORT, NSHARDS } from './constants';
 
 export class Reader extends Readable {
     constructor(ezs, dirpath, options) {
@@ -16,16 +16,14 @@ export class Reader extends Readable {
             const filepath = path.resolve(savedir, `./${index}.bin`);
             return fs.createReadStream(filepath)
                 .pipe(ezs.uncompress())
-                .pipe(ezs('unpack'))
-            ;
+                .pipe(ezs('unpack'));
         });
         this.tubout = new MultiStream.obj(streams)
-            .pipe(ezs('transit'))
-        ;
+            .pipe(ezs('transit'));
         this.tubout.on('data', (chunk, encoding) => {
-             if (!this.push(chunk, encoding)) {
-                 this.tubout.pause();
-             }
+            if (!this.push(chunk, encoding)) {
+                this.tubout.pause();
+            }
         });
         this.tubout.on('end', () => {
             this.push(null);
@@ -34,7 +32,6 @@ export class Reader extends Readable {
             DEBUG('Unlikely error', e);
         });
         this.tubout.pause();
-
     }
 
     _read(size) {
@@ -86,9 +83,9 @@ export class Writer extends Writable {
     }
 
     _final(callback) {
-        const promesses = this.handles.map((s,i) => new Promise(resolve => {
+        const promesses = this.handles.map((s, i) => new Promise((resolve) => {
             if (s[0]) {
-                s[0].end(() => { s[2].then(() => resolve(true))});
+                s[0].end(() => { s[2].then(() => resolve(true)); });
             } else {
                 resolve(false);
             }

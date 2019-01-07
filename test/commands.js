@@ -1,9 +1,11 @@
 import assert from 'assert';
-import { Readable }  from 'stream';
+import { Readable } from 'stream';
 import ezs from '../src';
 import Commands from '../src/commands';
 
-const { M_SINGLE, M_DISPATCH, M_NORMAL, M_CONDITIONAL } = ezs.constants;
+const {
+    M_SINGLE, M_DISPATCH, M_NORMAL, M_CONDITIONAL,
+} = ezs.constants;
 
 describe('analsye commands', () => {
     it('with simple pipeline', (done) => {

@@ -1,8 +1,8 @@
 import assert from 'assert';
 import Dir from 'path';
-import from  from 'from';
+import from from 'from';
 import fs from 'fs';
-import { Readable, PassThrough }  from 'stream';
+import { Readable, PassThrough } from 'stream';
 import ezs from '../src';
 import Expression from '../src/expression';
 
@@ -17,6 +17,7 @@ class Decade extends Readable {
         super({ objectMode: true });
         this.i = 0;
     }
+
     _read() {
         this.i += 1;
         if (this.i >= 10) {
@@ -1184,7 +1185,7 @@ describe('Build a pipeline', () => {
                 value: new Expression("env('c')"),
             }, env))
             .on('data', (chunk) => {
-                res += chunk.c
+                res += chunk.c;
             })
             .on('end', () => {
                 assert.strictEqual(res, 9);
@@ -1212,7 +1213,7 @@ describe('Build a pipeline', () => {
                 value: new Expression("env('c')"),
             }, env))
             .on('data', (chunk) => {
-                res += chunk.b
+                res += chunk.b;
             })
             .on('end', () => {
                 assert.strictEqual(res, 18);
@@ -1284,8 +1285,6 @@ describe('Build a pipeline', () => {
                 done();
             });
     });
-
-
 
 
 /**/

@@ -4,7 +4,7 @@ import LRU from 'lru-cache';
 import { PassThrough } from 'stream';
 
 const deleteFile = (key, fileName) => {
-    fs.unlink(fileName, err => {
+    fs.unlink(fileName, (err) => {
         if (err) {
             console.error(err);
         }
@@ -13,7 +13,7 @@ const deleteFile = (key, fileName) => {
 
 export default class Cache {
     constructor(ezs, opts) {
-        const options = opts || {}
+        const options = opts || {};
         const cacheOptions = {
             max: 500,
             maxAge: 1000 * 60 * 60,
@@ -33,13 +33,10 @@ export default class Cache {
             if (this.objectMode) {
                 return ezs
                     .load(cacheFile, { nShards: 1 });
-            } else {
-                return fs.createReadStream(cacheFile)
-                    .pipe(ezs.uncompress()) ;
-                ;
             }
+            return fs.createReadStream(cacheFile)
+                .pipe(ezs.uncompress());
         }
-        return;
     }
 
     set(key) {
@@ -70,12 +67,11 @@ export default class Cache {
                         cache.set(key, tmpFile);
                         feed.close();
                     });
-                })
+                });
                 cacheInput.destroy();
             }
         };
         const stream = new PassThrough(streamOptions);
         return stream.pipe(ezs(func));
     }
-
 }

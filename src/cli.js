@@ -67,7 +67,7 @@ export default function cli(errlog) {
 
     const argv = args.argv;
     const firstarg = argv._.shift();
-    const port =  argv.port;
+    const port = argv.port;
 
     if (argv.verbose) {
         debug.enable('ezs');

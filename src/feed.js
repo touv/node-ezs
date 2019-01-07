@@ -4,6 +4,7 @@ export default class Feed {
         this.done = done;
         this.error = error;
     }
+
     write(something) {
         if (something === null) {
             this.close();
@@ -11,17 +12,21 @@ export default class Feed {
             this.push(something);
         }
     }
+
     end() {
         this.done();
     }
+
     send(something) {
         this.write(something);
         this.end();
     }
+
     close() {
         this.push(null);
         this.done();
     }
+
     stop(withError) {
         this.error(withError);
         this.close();
