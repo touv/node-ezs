@@ -12,7 +12,7 @@ import pack from './pack'; // pack
 import transit from './transit';
 import shuffle from './shuffle';
 import env from './env';
-import partition from './partition';
+import group from './group';
 
 export default {
     extract,
@@ -29,5 +29,5 @@ export default {
     transit,
     shuffle,
     env,
-    partition,
+    group,
 };

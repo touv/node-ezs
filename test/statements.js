@@ -3,7 +3,7 @@ import from from 'from';
 import ezs from '../src';
 
 describe('statements', () => {
-    it('partition#1', (done) => {
+    it('group#1', (done) => {
         from([
             'lorem',
             'Lorem',
@@ -15,7 +15,7 @@ describe('statements', () => {
             'truc',
             'lorem',
         ])
-            .pipe(ezs('partition', { size: 3 }))
+            .pipe(ezs('group', { size: 3 }))
             .on('data', (chunk) => {
                 assert(Array.isArray(chunk));
                 assert(chunk.length === 3);
@@ -24,7 +24,7 @@ describe('statements', () => {
                 done();
             });
     });
-    it('partition#2', (done) => {
+    it('group#2', (done) => {
         const res = [];
         from([
             'lorem',
@@ -36,7 +36,7 @@ describe('statements', () => {
             'titi',
             'truc',
         ])
-            .pipe(ezs('partition', { size: 3 }))
+            .pipe(ezs('group', { size: 3 }))
             .on('data', (chunk) => {
                 assert(Array.isArray(chunk));
                 res.push(chunk);
