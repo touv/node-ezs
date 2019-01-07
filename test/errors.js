@@ -1,10 +1,6 @@
 import assert from 'assert';
-import Dir from 'path';
-import from from 'from';
-import fs from 'fs';
-import { Readable, PassThrough } from 'stream';
+import { Readable } from 'stream';
 import ezs from '../src';
-import Expression from '../src/expression';
 
 ezs.use(require('./locals'));
 
@@ -40,7 +36,7 @@ describe('Catch error in a pipeline', () => {
                 assert.equal(error.message.split('\n')[0], 'Processing item #1 failed with Error: Bang!');
                 done();
             })
-            .on('data', (chunk) => {
+            .on('data', () => {
                 throw new Error('no data should be received');
             });
     });
@@ -54,7 +50,7 @@ describe('Catch error in a pipeline', () => {
                 assert.equal(error.message.split('\n')[0], 'Processing item #1 failed with Error: Badaboum!');
                 done();
             })
-            .on('data', (chunk) => {
+            .on('data', () => {
                 throw new Error('no data should be received');
             });
     });
@@ -77,9 +73,9 @@ describe('Catch error in a pipeline', () => {
             .pipe(ezs('plouf'))
             .on('error', (error) => {
                 counter += 1;
-                errmsg = error.message.split('\n')[0];
+                [errmsg] = error.message.split('\n');
             })
-            .on('data', (chunk) => {
+            .on('data', () => {
                 throw new Error('no data should be received');
             })
             .on('end', () => {
@@ -98,7 +94,7 @@ describe('Catch error in a pipeline', () => {
                 counter += chunk;
             })
             .on('error', (error) => {
-                errmsg = error.message.split('\n')[0];
+                [errmsg] = error.message.split('\n');
             })
             .on('end', () => {
                 assert.equal(21, counter);
@@ -106,20 +102,21 @@ describe('Catch error in a pipeline', () => {
                 done();
             });
     });
-    it('with errors in every chunk processed by a synchronous statement that sends them to the outgoing stream (send)', (done) => {
-        let counter = 0;
-        const ten = new Decade();
-        ten
-            .pipe(ezs('boum'))
-            .pipe(ezs.catch())
-            .on('data', () => {
-                counter += 1;
-            })
-            .on('end', () => {
-                assert.equal(0, counter);
-                done();
-            });
-    });
+    it('with errors in every chunk processed by a synchronous statement that sends them to the outgoing stream (send)',
+        (done) => {
+            let counter = 0;
+            const ten = new Decade();
+            ten
+                .pipe(ezs('boum'))
+                .pipe(ezs.catch())
+                .on('data', () => {
+                    counter += 1;
+                })
+                .on('end', () => {
+                    assert.equal(0, counter);
+                    done();
+                });
+        });
     it('catch & get error', (done) => {
         let counter = 0;
         const ten = new Decade();

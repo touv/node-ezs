@@ -112,7 +112,7 @@ const duplexer = (ezs, environment, onerror) => (serverOptions, index) => {
 
     handle.on('error', (e) => {
         onerror(new Error(
-            `${hostname || '?'}:${port || '?'}#${index} return ${e.message}`,
+            `${hostname || '?'}:${port || '?'}#${index} return ${e.message}`,
         ));
         output.end();
         handle.abort();
@@ -120,7 +120,7 @@ const duplexer = (ezs, environment, onerror) => (serverOptions, index) => {
 
     handle.setNoDelay(false);
 
-    const inp = input
+    input
         .pipe(ezs('pack'))
         .pipe(ezs.compress())
         .pipe(handle);
@@ -138,9 +138,7 @@ export default class Dispatch extends Duplex {
         this.tubout = this.tubin
             .pipe(ezs('transit'));
         this.on('finish', () => {
-            this.handles.forEach((handle, index) => {
-                handle[0].end();
-            });
+            this.handles.forEach(handle => handle[0].end());
         });
         this.tubout.on('data', (chunk, encoding) => {
             if (!this.push(chunk, encoding)) {
@@ -158,7 +156,7 @@ export default class Dispatch extends Duplex {
         assert(Array.isArray(commands), 'commands should be an array.');
         assert(Array.isArray(servers), 'servers should be an array.');
 
-        const ns = Number(ezs.settings.nShards) || NSHARDS;
+        const ns = Number(ezs.settings.nShards) || NSHARDS;
 
         this.servers = _
             .chain(servers)
@@ -187,7 +185,10 @@ export default class Dispatch extends Duplex {
                 const streams = this.handles.map(h => h[1]);
                 MultiStream(streams, this.ezs.objectMode()).pipe(this.tubin);
                 this.balance(chunk, encoding, callback);
-            }, callback).catch(console.error);
+            }, callback)
+                .catch((e) => {
+                    DEBUG('Unable to gathering streams', e);
+                });
         } else {
             this.balance(chunk, encoding, callback);
         }

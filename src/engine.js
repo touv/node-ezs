@@ -34,10 +34,9 @@ export default class Engine extends SafeTransform {
         this.index += 1;
         if (chunk instanceof Error) {
             this.push(chunk);
-            done();
-        } else {
-            this.execWith(chunk, done);
+            return done();
         }
+        return this.execWith(chunk, done);
     }
 
     _flush(done) {
@@ -46,7 +45,7 @@ export default class Engine extends SafeTransform {
 
     execWith(chunk, done) {
         const currentIndex = this.index;
-        const error = (error) => {
+        const warn = (error) => {
             this.emit('error', createErrorWith(error, currentIndex));
         };
         const push = (data) => {
@@ -58,7 +57,7 @@ export default class Engine extends SafeTransform {
             }
             return this.push(data);
         };
-        const feed = new Feed(push, done, error);
+        const feed = new Feed(push, done, warn);
         try {
             this.scope.isFirst = () => (currentIndex === 1);
             this.scope.getIndex = () => currentIndex;
@@ -75,11 +74,11 @@ export default class Engine extends SafeTransform {
                 return defval;
             };
             Promise.resolve(this.func.call(this.scope, chunk, feed)).catch((e) => {
-                error(e);
+                warn(e);
                 done();
             });
         } catch (e) {
-            error(e);
+            warn(e);
             done();
         }
     }

@@ -1,7 +1,6 @@
 import assert from 'assert';
 import path from 'path';
 import os from 'os';
-import fs from 'fs';
 import { Readable } from 'stream';
 import ezs from '../src';
 

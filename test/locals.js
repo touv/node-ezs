@@ -77,7 +77,7 @@ function accu(data, feed) {
 }
 
 function ignoreMe(data, feed) {
-    const objParam = this.getParam('object', {});
+    this.getParam('object', {});
     return feed.send(data);
 }
 
@@ -134,12 +134,12 @@ function splish(data, feed) {
     if (this.isLast()) {
         return feed.close();
     }
-    const p = new Promise((resolve, reject) => {
+    const p = new Promise((resolve) => {
         resolve(data);
     });
-    p
+    return p
         .then(d => feed.send(d))
-        .catch(e => feed.end());
+        .catch(() => feed.end());
 }
 
 function splash(data, feed) {
@@ -149,7 +149,7 @@ function splash(data, feed) {
     const p = new Promise((resolve, reject) => {
         reject(data);
     });
-    p
+    return p
         .then(d => feed.send(d))
         .catch(() => feed.end());
 }

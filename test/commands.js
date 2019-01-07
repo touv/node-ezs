@@ -1,10 +1,9 @@
 import assert from 'assert';
-import { Readable } from 'stream';
 import ezs from '../src';
 import Commands from '../src/commands';
 
 const {
-    M_SINGLE, M_DISPATCH, M_NORMAL, M_CONDITIONAL,
+    M_DISPATCH,
 } = ezs.constants;
 
 describe('analsye commands', () => {
@@ -18,7 +17,6 @@ describe('analsye commands', () => {
 
             [increment?single]
             step = 2
-
 
             [increment?${M_DISPATCH}]
             step = 3

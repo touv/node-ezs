@@ -13,14 +13,16 @@ const resolve = (name) => {
 const chooseZ = () => {
     if (resolve('node-zstd')) {
         DEBUG('ezs will use zstd to compress/uncompress stream.');
+        // eslint-disable-next-line
         return require('node-zstd');
     }
     if (resolve('zlib')) {
         DEBUG('ezs will use zlib to compress/uncompress stream.');
+        // eslint-disable-next-line
         return require('zlib');
     }
-
     DEBUG('ezs will not compress/uncompress stream.');
+    return null;
 };
 
 const z = chooseZ();
@@ -34,7 +36,7 @@ export function compressStream(ezs) {
     return new PassThrough(ezs.bytesMode());
 }
 
-export function uncompressStream() {
+export function uncompressStream(ezs) {
     if (typeof z.createGunzip === 'function') {
         return z.createGunzip();
     } if (typeof z.compressStream === 'function') {

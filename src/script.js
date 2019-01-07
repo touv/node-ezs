@@ -41,11 +41,10 @@ export default function Script(commands) {
                 let name = 'debug';
                 const test = '';
                 if (Array.isArray(matches1)) {
-                    name = matches1[1];
-                    mode = matches1[2];
+                    [, name, mode] = matches1;
                 } else {
                     mode = M_NORMAL;
-                    name = matches0[1];
+                    [, name] = matches0;
                 }
                 const newSection = {
                     mode,

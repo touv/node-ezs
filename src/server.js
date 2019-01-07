@@ -1,4 +1,3 @@
-import os from 'os';
 import crypto from 'crypto';
 import cluster from 'cluster';
 import http from 'http';
@@ -19,7 +18,7 @@ function receive(data, feed) {
         return feed.close();
     }
     this.commands.push(data);
-    feed.end();
+    return feed.end();
 }
 
 function register(store) {
@@ -30,7 +29,7 @@ function register(store) {
         const shasum = crypto.createHash('sha1');
         shasum.update(data);
         const cmdid = shasum.digest('hex');
-        store
+        return store
             .set(cmdid, data)
             .then(() => {
                 try {
@@ -125,7 +124,7 @@ function createServer(ezs, store, port) {
             }
         });
     server.setTimeout(0);
-    const srv = server.listen(port || PORT);
+    server.listen(port || PORT);
     signals.forEach(signal => process.on(signal, () => {
         DEBUG(`Signal received, stoping server with PID ${process.pid}`);
         server.close(() => process.exit(0));

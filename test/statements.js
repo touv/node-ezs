@@ -4,7 +4,6 @@ import ezs from '../src';
 
 describe('statements', () => {
     it('partition#1', (done) => {
-        const res = [];
         from([
             'lorem',
             'Lorem',
@@ -53,7 +52,6 @@ describe('statements', () => {
             });
     });
     it('harvest#1', (done) => {
-        const res = [];
         from([
             'https://raw.githubusercontent.com/touv/node-ezs/master/package.json',
         ])
@@ -67,13 +65,12 @@ describe('statements', () => {
             });
     });
     it('harvest#2', (done) => {
-        const res = [];
         let check = true;
         from([
             'https://raw.githubusercontent.com/touv/node-ezs/master/package.no_found',
         ])
             .pipe(ezs('harvest'))
-            .on('data', (chunk) => {
+            .on('data', () => {
                 check = false;
             })
             .on('end', () => {

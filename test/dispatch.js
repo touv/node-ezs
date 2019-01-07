@@ -1,10 +1,9 @@
 import assert from 'assert';
 import { Readable } from 'stream';
 import ezs from '../src';
-import JSONezs from '../src/json';
 
 const {
-    M_SINGLE, M_DISPATCH, M_NORMAL, M_CONDITIONAL,
+    M_DISPATCH,
 } = ezs.constants;
 
 ezs.use(require('./locals'));

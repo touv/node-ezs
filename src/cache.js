@@ -2,11 +2,12 @@ import fs from 'fs';
 import tmpFilepath from 'tmp-filepath';
 import LRU from 'lru-cache';
 import { PassThrough } from 'stream';
+import { DEBUG } from './constants';
 
 const deleteFile = (key, fileName) => {
     fs.unlink(fileName, (err) => {
         if (err) {
-            console.error(err);
+            DEBUG('Unable to delete file from the cache', err);
         }
     });
 };
@@ -26,7 +27,7 @@ export default class Cache {
     }
 
     get(key) {
-        const ezs = this.ezs;
+        const { ezs } = this;
         const cache = this.handle;
         const cacheFile = cache.get(key);
         if (cacheFile) {
@@ -37,10 +38,11 @@ export default class Cache {
             return fs.createReadStream(cacheFile)
                 .pipe(ezs.uncompress());
         }
+        return null;
     }
 
     set(key) {
-        const ezs = this.ezs;
+        const { ezs } = this;
         const cache = this.handle;
         const tmpFile = tmpFilepath('.bin');
         const streamOptions = this.objectMode ? ezs.objectMode() : ezs.bytesMode();
