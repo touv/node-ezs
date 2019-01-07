@@ -6,7 +6,7 @@ import { NSHARDS } from '../constants';
  * @param {Number} [size] Size of each partition
  * @returns {String}
  */
-export default function partition(data, feed) {
+export default function group(data, feed) {
     const size = Number(this.getParam('size')) || NSHARDS;
 
     if (this.buffer === undefined) {
