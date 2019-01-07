@@ -1,9 +1,10 @@
-const assert = require('assert');
-const fs = require('fs');
-const Dir = require('path');
-const from = require('from');
-const ezs = require('../lib');
-const Expression = require('../lib/expression').default;
+import assert from 'assert';
+import Dir from 'path';
+import from  from 'from';
+import fs from 'fs';
+import { Readable, PassThrough }  from 'stream';
+import ezs from '../src';
+import Expression from '../src/expression';
 
 ezs.use(require('./locals'));
 
@@ -11,11 +12,7 @@ ezs.config('stepper', {
     step: 3,
 });
 
-const Read = require('stream').Readable;
-const PassThrough = require('stream').PassThrough;
-
-
-class Decade extends Read {
+class Decade extends Readable {
     constructor() {
         super({ objectMode: true });
         this.i = 0;

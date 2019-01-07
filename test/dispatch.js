@@ -1,17 +1,16 @@
-const assert = require('assert');
-const ezs = require('../lib');
+import assert from 'assert';
+import { Readable }  from 'stream';
+import ezs from '../src';
+import JSONezs from '../src/json';
+
 const { M_SINGLE, M_DISPATCH, M_NORMAL, M_CONDITIONAL } = ezs.constants;
-const JSONezs = require('../lib/json').default;
 
 ezs.use(require('./locals'));
-
 ezs.config('stepper', {
     step: 4,
 });
 
-const Read = require('stream').Readable;
-
-class Upto extends Read {
+class Upto extends Readable {
     constructor(m) {
         super({ objectMode: true });
         this.i = 0;

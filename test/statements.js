@@ -1,6 +1,6 @@
-const assert = require('assert');
-const from = require('from');
-const ezs = require('ezs');
+import assert from 'assert';
+import from from 'from';
+import ezs from '../src';
 
 describe('statements', () => {
     it('partition#1', (done) => {

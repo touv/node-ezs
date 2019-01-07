@@ -1,6 +1,8 @@
-const assert = require('assert');
-const ezs = require('../lib');
-const Commands = require('../lib/commands').default;
+import assert from 'assert';
+import { Readable }  from 'stream';
+import ezs from '../src';
+import Commands from '../src/commands';
+
 const { M_SINGLE, M_DISPATCH, M_NORMAL, M_CONDITIONAL } = ezs.constants;
 
 describe('analsye commands', () => {
