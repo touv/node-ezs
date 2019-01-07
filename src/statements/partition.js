@@ -20,9 +20,9 @@ export default function partition(data, feed) {
     }
     this.buffer.push(data);
     if (this.buffer.length >= size) {
-        feed.send(Array.from(this.buffer));
+        const buf = Array.from(this.buffer);
         this.buffer = [];
-    } else {
-        feed.end();
+        return feed.send(buf);
     }
+    return feed.end();
 }

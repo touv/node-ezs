@@ -837,6 +837,7 @@ describe('Build a pipeline', () => {
                 value: expr,
             }))
             .pipe(ezs('shift'))
+            // eslint-disable-next-line
             .on('error', console.error) // Error [ERR_STREAM_PUSH_AFTER_EOF]: stream.push() after EOF
             .on('data', (chunk) => {
                 assert.strictEqual(chunk.a, 1);
