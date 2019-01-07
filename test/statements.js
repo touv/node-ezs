@@ -75,6 +75,31 @@ describe('statements', () => {
                 done();
             });
     });
+    it('ungroup#2', (done) => {
+        const res = [];
+        from([
+            'lorem',
+            'Lorem',
+            'loren',
+            'korem',
+            'olrem',
+            'toto',
+            'titi',
+            'truc',
+            'lorem',
+        ])
+            .pipe(ezs('group', { size: 300 }))
+            .pipe(ezs('ungroup'))
+            .on('data', (chunk) => {
+                assert(!Array.isArray(chunk));
+                res.push(chunk);
+            })
+            .on('end', () => {
+                assert(res.length === 9);
+                done();
+            });
+    });
+
 
     /* Not yet ready
     it('harvest#1', (done) => {

@@ -60,6 +60,7 @@ function createServer(ezs, store, port) {
                 request
                     .pipe(ezs.uncompress())
                     .pipe(ezs('unpack'))
+                    .pipe(ezs('ungroup'))
                     .pipe(ezs(receive))
                     .pipe(ezs(register(store)))
                     .pipe(ezs.catch((error) => {
@@ -83,10 +84,12 @@ function createServer(ezs, store, port) {
                     request
                         .pipe(ezs.uncompress())
                         .pipe(ezs('unpack'))
+                        .pipe(ezs('ungroup'))
                         .pipe(processor)
                         .pipe(ezs.catch((error) => {
                             DEBUG(`Server has caught an error in statements with ID: ${cmdid}`, error);
                         }))
+                        .pipe(ezs('group'))
                         .pipe(ezs('pack'))
                         .pipe(ezs.compress())
                         .pipe(response);

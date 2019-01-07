@@ -79,6 +79,7 @@ const registerTo = (ezs, { hostname, port }, commands) => new Promise((resolve, 
     });
     const input = new PassThrough(ezs.objectMode());
     input
+        .pipe(ezs('group'))
         .pipe(ezs('pack'))
         .pipe(ezs.compress())
         .pipe(req);
@@ -100,6 +101,7 @@ const duplexer = (ezs, environment, onerror) => (serverOptions, index) => {
             res
                 .pipe(ezs.uncompress())
                 .pipe(ezs('unpack'))
+                .pipe(ezs('ungroup'))
                 .on('data', chunk => output.write(chunk))
                 .on('end', () => output.end());
         } else {
