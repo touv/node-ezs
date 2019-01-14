@@ -74,6 +74,65 @@ describe('through a server', () => {
             });
     });
 
+    it('with simple script (group)', (done) => {
+        let res = 0;
+        const script = `
+            [use]
+            plugin = test/locals
+
+            [increment]
+            step = 2
+
+            [decrement]
+            step = 2
+
+        `;
+        const server = '127.0.0.1';
+        const ten = new Upto(10);
+        ten
+            .pipe(ezs('group'))
+            .pipe(ezs('swarm', {
+                server,
+                script,
+            }))
+            .on('data', (chunk) => {
+                res += chunk;
+            })
+            .on('end', () => {
+                assert.strictEqual(res, 45);
+                done();
+            });
+    });
+
+    it('with simple script (raw)', (done) => {
+        let res = 0;
+        const script = `
+            [use]
+            plugin = test/locals
+
+            [increment]
+            step = 2
+
+            [decrement]
+            step = 2
+
+        `;
+        const server = '127.0.0.1';
+        const ten = new Upto(10);
+        ten
+            .pipe(ezs('swarm', {
+                server,
+                script,
+            }))
+            .on('data', (chunk) => {
+                res += chunk;
+            })
+            .on('end', () => {
+                assert.strictEqual(res, 45);
+                done();
+            });
+    });
+
     it('with simple pipeline (N connections)', (done) => {
         let res = 0;
         const commands = [

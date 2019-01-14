@@ -4,7 +4,7 @@ export default class Workers {
         this.lastIndex = -1;
     }
 
-    get() {
+    choose() {
         this.lastIndex += 1;
         if (this.lastIndex >= this.handles.length) {
             this.lastIndex = 0;

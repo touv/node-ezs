@@ -48,7 +48,7 @@ export const registerCommands = (ezs, { hostname, port }, commands) => new Promi
         },
         agent,
     };
-    DEBUG(`Try to connect to server ${hostname}:${port}`);
+    DEBUG(`Client will register commands to SRV//${hostname}:${port} `);
     const req = http.request(requestOptions, (res) => {
         let requestResponse = '';
         res.setEncoding('utf8');
@@ -62,7 +62,7 @@ export const registerCommands = (ezs, { hostname, port }, commands) => new Promi
             try {
                 const result = JSON.parse(requestResponse);
                 DEBUG(
-                    `The server has registered all statements with ID: ${result}`,
+                    `Client received STMT#${result} from SRV//${hostname}:${port} `,
                 );
                 resolve({
                     hostname,
@@ -102,6 +102,7 @@ export const connectServer = (ezs, environment, onerror) => (serverOptions, inde
     const { hostname, port } = opts;
     const input = new PassThrough(ezs.objectMode());
     const output = new PassThrough(ezs.objectMode());
+    DEBUG(`Client will send data to SRV//${hostname}:${port} `);
     const handle = http.request(opts, (res) => {
         if (res.statusCode === 200) {
             res
@@ -112,7 +113,7 @@ export const connectServer = (ezs, environment, onerror) => (serverOptions, inde
                 .on('end', () => output.end());
         } else {
             onerror(new Error(
-                `${hostname}:${port}#${index} return ${res.statusCode}`,
+                `SRV//${hostname}:${port}#${index} return ${res.statusCode}`,
             ));
             output.end();
         }
@@ -120,7 +121,7 @@ export const connectServer = (ezs, environment, onerror) => (serverOptions, inde
 
     handle.on('error', (e) => {
         onerror(new Error(
-            `${hostname || '?'}:${port || '?'}#${index} return ${e.message}`,
+            `SRV//${hostname || '?'}:${port || '?'}#${index} return ${e.message}`,
         ));
         output.end();
         handle.abort();
@@ -136,7 +137,7 @@ export const connectServer = (ezs, environment, onerror) => (serverOptions, inde
     return duplex;
 };
 
-export const fetchServer = (handle, data) => {
+export const sendServer = (handle, data) => {
     handle[0].write(data);
     handle[0].end();
     return handle[1];

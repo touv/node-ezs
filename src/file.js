@@ -3,12 +3,16 @@ import { dirname } from 'path';
 
 export default function File(ezs, filename) {
     try {
+        if (!filename) {
+            return false;
+        }
+
         if (!statSync(filename).isFile()) {
-            return null;
+            return false;
         }
         ezs.addPath(dirname(filename));
         return readFileSync(filename, 'utf8');
     } catch (e) {
-        throw e;
+        return false;
     }
 }

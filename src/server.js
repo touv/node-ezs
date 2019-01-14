@@ -74,12 +74,12 @@ function createServer(ezs, store, port) {
                         const commands = JSONezs.parse(cmds);
                         processor = ezs.pipeline(commands, headers);
                     } catch (e) {
-                        DEBUG(`Server cannot execute statements with ID: ${cmdid}`, e);
+                        DEBUG(`Server cannot execute STMT#${cmdid}`, e);
                         response.writeHead(400);
                         response.end();
                         return;
                     }
-                    DEBUG(`Server will execute statements with ID: ${cmdid}`);
+                    DEBUG(`Server will execute STMT#${cmdid}`);
                     response.writeHead(200);
                     request
                         .pipe(ezs.uncompress())
@@ -87,7 +87,7 @@ function createServer(ezs, store, port) {
                         .pipe(ezs('ungroup'))
                         .pipe(processor)
                         .pipe(ezs.catch((error) => {
-                            DEBUG(`Server has caught an error in statements with ID: ${cmdid}`, error);
+                            DEBUG(`Server has caught an error in STMT#${cmdid}`, error);
                         }))
                         .pipe(ezs('group'))
                         .pipe(ezs('pack'))
@@ -95,7 +95,7 @@ function createServer(ezs, store, port) {
                         .pipe(response);
                     request.resume();
                 }, (error) => {
-                    DEBUG(`Server failed to load statements with ID: ${cmdid}`, error);
+                    DEBUG(`Server failed to load STMT#${cmdid}`, error);
                     response.writeHead(500);
                     response.end();
                 });
