@@ -5,6 +5,7 @@ import debug from 'debug';
 import { DEBUG } from './constants';
 import ezs from '.';
 import Commands from './commands';
+import File from './file';
 import { version } from '../package.json';
 
 export default function cli(errlog) {
@@ -99,13 +100,12 @@ export default function cli(errlog) {
             process.exit(1);
         }
 
-        if (!fs.statSync(file).isFile()) {
+        const script = File(ezs, file);
+        if (!script) {
             errlog(`${firstarg} isn't a file.`);
             yargs.showHelp();
             process.exit(1);
         }
-
-        const script = fs.readFileSync(file).toString();
         const cmds = new Commands(ezs.parseString(script));
 
         let environement;
