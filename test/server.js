@@ -43,8 +43,17 @@ describe('through a server', () => {
         server4.close();
     });
 
-    it('with simple pipeline', (done) => {
-        let res = 0;
+    describe('with simple pipeline', () => {
+        const script = `
+            [use]
+            plugin = test/locals
+
+            [increment]
+            step = 2
+
+            [decrement]
+            step = 2
+        `;
         const commands = [
             {
                 name: 'increment',
@@ -59,78 +68,74 @@ describe('through a server', () => {
                 },
             },
         ];
-        const servers = [
-            '127.0.0.1',
-        ];
-        const ten = new Upto(10);
-        ten
-            .pipe(ezs.dispatch(commands, servers))
-            .on('data', (chunk) => {
-                res += chunk;
-            })
-            .on('end', () => {
-                assert.strictEqual(res, 45);
-                done();
-            });
-    });
-
-    it('with simple script (group)', (done) => {
-        let res = 0;
-        const script = `
-            [use]
-            plugin = test/locals
-
-            [increment]
-            step = 2
-
-            [decrement]
-            step = 2
-
-        `;
         const server = '127.0.0.1';
-        const ten = new Upto(10);
-        ten
-            .pipe(ezs('group'))
-            .pipe(ezs('swarm', {
-                server,
-                script,
-            }))
-            .on('data', (chunk) => {
-                res += chunk;
-            })
-            .on('end', () => {
-                assert.strictEqual(res, 45);
-                done();
-            });
-    });
 
-    it('with simple script (raw)', (done) => {
-        let res = 0;
-        const script = `
-            [use]
-            plugin = test/locals
+        it('with commands & dispatch', (done) => {
+            let res = 0;
+            const ten = new Upto(10);
+            ten
+                .pipe(ezs.dispatch(commands, [server]))
+                .on('data', (chunk) => {
+                    res += chunk;
+                })
+                .on('end', () => {
+                    assert.strictEqual(res, 45);
+                    done();
+                });
+        });
 
-            [increment]
-            step = 2
+        it('with script & swarm (group)', (done) => {
+            let res = 0;
+            const ten = new Upto(10);
+            ten
+                .pipe(ezs('group'))
+                .pipe(ezs('swarm', {
+                    server,
+                    script,
+                }))
+                .on('data', (chunk) => {
+                    res += chunk;
+                })
+                .on('end', () => {
+                    assert.strictEqual(res, 45);
+                    done();
+                });
+        });
 
-            [decrement]
-            step = 2
+        it('with script & swarm (no group)', (done) => {
+            let res = 0;
+            const ten = new Upto(10);
+            ten
+                .pipe(ezs('swarm', {
+                    server,
+                    script,
+                }))
+                .on('data', (chunk) => {
+                    res += chunk;
+                })
+                .on('end', () => {
+                    assert.strictEqual(res, 45);
+                    done();
+                });
+        });
 
-        `;
-        const server = '127.0.0.1';
-        const ten = new Upto(10);
-        ten
-            .pipe(ezs('swarm', {
-                server,
-                script,
-            }))
-            .on('data', (chunk) => {
-                res += chunk;
-            })
-            .on('end', () => {
-                assert.strictEqual(res, 45);
-                done();
-            });
+        it('with commands & swarm (group)', (done) => {
+            let res = 0;
+            const ten = new Upto(10);
+            ten
+                .pipe(ezs('group'))
+                .pipe(ezs('swarm', {
+                    server,
+                    commands,
+                }))
+                .on('data', (chunk) => {
+                    res += chunk;
+                })
+                .on('end', () => {
+                    assert.strictEqual(res, 45);
+                    done();
+                });
+        });
     });
 
     it('with simple pipeline (N connections)', (done) => {
