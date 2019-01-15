@@ -48,6 +48,10 @@ export const registerCommands = (ezs, { hostname, port }, commands) => new Promi
         },
         agent,
     };
+    if (!Array.isArray(commands)) {
+        return reject(new Error('No valid commands array'));
+    }
+
     DEBUG(`Client will register commands to SRV//${hostname}:${port} `);
     const req = http.request(requestOptions, (res) => {
         let requestResponse = '';
@@ -91,6 +95,7 @@ export const registerCommands = (ezs, { hostname, port }, commands) => new Promi
         .pipe(req);
     commands.forEach(command => input.write(command));
     input.end();
+    return req;
 });
 
 export const connectServer = (ezs, environment, onerror) => (serverOptions, index) => {
