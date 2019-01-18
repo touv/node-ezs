@@ -159,7 +159,7 @@ describe('through a server', () => {
         });
     });
 
-    it('with simple pipeline (N connections)', (done) => {
+    it.only('with simple pipeline (N connections)', (done) => {
         let res = 0;
         const commands = [
             {

@@ -32,12 +32,13 @@ describe('Catch error in a pipeline', () => {
             .pipe(ezs(() => {
                 throw new Error('Bang!');
             }))
-            .on('error', (error) => {
-                assert.equal(error.message.split('\n')[0], 'Processing item #1 failed with Error: Bang!');
-                done();
+            .on('error', () => {
+                throw new Error('The sync errors should be injected in the pipeline');
             })
-            .on('data', () => {
-                throw new Error('no data should be received');
+            .on('data', (chunk) => {
+                assert.ok(chunk instanceof Error);
+            }).on('end', () => {
+                done();
             });
     });
     // https://bytearcher.com/articles/why-asynchronous-exceptions-are-uncatchable/
@@ -58,6 +59,9 @@ describe('Catch error in a pipeline', () => {
         const ten = new Decade();
         ten
             .pipe(ezs('boum'))
+            .on('error', () => {
+                throw new Error('The sent errors should be injected in the pipeline');
+            })
             .on('data', (chunk) => {
                 assert.ok(chunk instanceof Error);
             })
