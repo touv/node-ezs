@@ -10,6 +10,8 @@ const {
 
 ezs.use(require('./locals'));
 
+ezs.addPath(__dirname);
+
 ezs.config('stepper', {
     step: 4,
 });
@@ -49,7 +51,7 @@ describe('through a server', () => {
             plugin = test/locals
 
             [increment]
-            step = 2
+            step = 3
 
             [decrement]
             step = 2
@@ -58,7 +60,7 @@ describe('through a server', () => {
             {
                 name: 'increment',
                 args: {
-                    step: 2,
+                    step: 3,
                 },
             },
             {
@@ -79,7 +81,7 @@ describe('through a server', () => {
                     res += chunk;
                 })
                 .on('end', () => {
-                    assert.strictEqual(res, 45);
+                    assert.strictEqual(res, 54);
                     done();
                 });
         });
@@ -91,16 +93,35 @@ describe('through a server', () => {
                 .pipe(ezs('group'))
                 .pipe(ezs('swarm', {
                     server,
-                    script,
+                    string: script,
                 }))
                 .on('data', (chunk) => {
                     res += chunk;
                 })
                 .on('end', () => {
-                    assert.strictEqual(res, 45);
+                    assert.strictEqual(res, 54);
                     done();
                 });
         });
+
+        it('with filescript & swarm (group)', (done) => {
+            let res = 0;
+            const ten = new Upto(10);
+            ten
+                .pipe(ezs('group'))
+                .pipe(ezs('swarm', {
+                    server,
+                    script: './script.ini',
+                }))
+                .on('data', (chunk) => {
+                    res += chunk;
+                })
+                .on('end', () => {
+                    assert.strictEqual(res, 54);
+                    done();
+                });
+        });
+
 
         it('with script & swarm (no group)', (done) => {
             let res = 0;
@@ -108,13 +129,13 @@ describe('through a server', () => {
             ten
                 .pipe(ezs('swarm', {
                     server,
-                    script,
+                    string: script,
                 }))
                 .on('data', (chunk) => {
                     res += chunk;
                 })
                 .on('end', () => {
-                    assert.strictEqual(res, 45);
+                    assert.strictEqual(res, 54);
                     done();
                 });
         });
@@ -132,7 +153,7 @@ describe('through a server', () => {
                     res += chunk;
                 })
                 .on('end', () => {
-                    assert.strictEqual(res, 45);
+                    assert.strictEqual(res, 54);
                     done();
                 });
         });
@@ -144,7 +165,7 @@ describe('through a server', () => {
             {
                 name: 'increment',
                 args: {
-                    step: 2,
+                    step: 3,
                 },
             },
             {
@@ -173,7 +194,7 @@ describe('through a server', () => {
                 res += chunk;
             })
             .on('end', () => {
-                assert.strictEqual(res, 45);
+                assert.strictEqual(res, 54);
                 done();
             });
     });
