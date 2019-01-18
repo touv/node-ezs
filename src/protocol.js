@@ -48,7 +48,7 @@ export const registerCommands = (ezs, { hostname, port }, commands) => new Promi
         },
         agent,
     };
-    if (!Array.isArray(commands)) {
+    if (!Array.isArray(commands) || commands.length === 0) {
         return reject(new Error('No valid commands array'));
     }
 
@@ -102,13 +102,14 @@ export const connectServer = (ezs, environment, onerror) => (serverOptions, inde
     const opts = {
         ...serverOptions,
         timeout: 0,
-        headers: environment,
+        headers: { ...environment },
     };
     const { hostname, port } = opts;
     const input = new PassThrough(ezs.objectMode());
     const output = new PassThrough(ezs.objectMode());
     DEBUG(`Client will send data to SRV//${hostname}:${port} `);
     const handle = http.request(opts, (res) => {
+        DEBUG(`Client receive ${res.statusCode}`);
         if (res.statusCode === 200) {
             res
                 .pipe(ezs.uncompress())
@@ -116,12 +117,20 @@ export const connectServer = (ezs, environment, onerror) => (serverOptions, inde
                 .pipe(ezs('ungroup'))
                 .on('data', chunk => output.write(chunk))
                 .on('end', () => output.end());
-        } else {
-            onerror(new Error(
-                `SRV//${hostname}:${port}#${index} return ${res.statusCode}`,
-            ));
-            output.end();
+            return 1;
         }
+        if (res.statusCode === 400) {
+            DEBUG(`Unable to execute STMP#${opts.path.slice(1)} with SRV//${hostname}:${port}#${index}`);
+            const errmsg = Parameter.decode(res.headers['x-error']);
+            onerror(new Error(`Server sent:\n ${errmsg}`));
+            res.close();
+            output.end();
+            return 2;
+        }
+        onerror(new Error(
+            `SRV//${hostname}:${port}#${index} return ${res.statusCode}`,
+        ));
+        return 3;
     });
 
     handle.on('error', (e) => {
