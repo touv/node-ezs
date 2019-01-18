@@ -65,8 +65,25 @@ function createServer(ezs, store, port) {
                     .pipe(ezs(register(store)))
                     .pipe(ezs.catch((error) => {
                         DEBUG('The server has detected an error while registering statements', error);
+                        DEBUG(`Server has caught an error in STMT#${cmdid}`, error);
+                        if (!response.headersSent) {
+                            response.writeHead(400, { 'x-error': Parameter.encode(error.toString()) });
+                            response.end();
+                        }
                     }))
-                    .pipe(response);
+                    .pipe(ezs((responseBody, output) => {
+                        if (!response.headersSent) {
+                            response.writeHead(200);
+                            const responseHeaders = {
+                                'Content-Type': 'application/json',
+                                'Content-Length': Buffer.byteLength(responseBody),
+                            };
+                            response.writeHead(200, responseHeaders);
+                            response.write(responseBody);
+                            response.end();
+                        }
+                        return output.send(input);
+                    }));
             } else if (url.match(/^\/[a-f0-9]{40}$/i) && method === 'POST') {
                 store.get(cmdid).then((cmds) => {
                     let processor;
@@ -75,12 +92,11 @@ function createServer(ezs, store, port) {
                         processor = ezs.pipeline(commands, headers);
                     } catch (e) {
                         DEBUG(`Server cannot execute STMT#${cmdid}`, e);
+                        response.setHeader('x-error', e);
                         response.writeHead(400);
                         response.end();
-                        return;
                     }
                     DEBUG(`Server will execute STMT#${cmdid}`);
-                    response.writeHead(200);
                     request
                         .pipe(ezs.uncompress())
                         .pipe(ezs('unpack'))
@@ -88,6 +104,16 @@ function createServer(ezs, store, port) {
                         .pipe(processor)
                         .pipe(ezs.catch((error) => {
                             DEBUG(`Server has caught an error in STMT#${cmdid}`, error);
+                            if (!response.headersSent) {
+                                response.writeHead(400, { 'X-error': Parameter.encode(error.toString()) });
+                                response.end();
+                            }
+                        }))
+                        .pipe(ezs((input, output, idx) => {
+                            if (idx === 1) {
+                                response.writeHead(200);
+                            }
+                            return output.send(input);
                         }))
                         .pipe(ezs('group'))
                         .pipe(ezs('pack'))
