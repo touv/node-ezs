@@ -15,20 +15,22 @@ export default function swarm(data, feed) {
         return feed.close();
     }
     if (this.isFirst()) {
-        this.request = connectServer(this.ezs, {}, e => feed.stop(e));
-
         const servers = inspectServers(this.getParam('server', []));
-        const file = this.getParam('file');
-        const script = this.getParam('script', File(this.ezs, file));
-        const cmds = new Commands(this.ezs.parseString(script));
+        const script = this.getParam('script');
+        const string = this.getParam('string', File(this.ezs, script));
+        const cmds = new Commands(this.ezs.parseString(string));
         const commands = this.getParam('commands', cmds.get());
 
+        if (!servers || servers.length === 0 || !commands || commands.length === 0) {
+            return feed.stop(new Error('Invalid parmeter for swarm'));
+        }
         pMap(servers, server => registerCommands(this.ezs, server, commands).catch((e) => {
             DEBUG(`Unable to register commands with the server: ${server}`, e);
         })).then((workers) => {
             this.servers = new Workers(workers);
             const worker = this.servers.choose();
-            const handle = this.request(worker, this.getIndex());
+            const request = connectServer(this.ezs, this.getEnv(), e => feed.stop(e));
+            const handle = request(worker, this.getIndex());
             return sendServer(handle, data)
                 .on('error', e => feed.write(e))
                 .on('data', d => feed.write(d))
@@ -40,7 +42,8 @@ export default function swarm(data, feed) {
         return null;
     }
     const server = this.servers.choose();
-    const handle = this.request(server, this.getIndex());
+    const request = connectServer(this.ezs, this.getEnv(), e => feed.stop(e));
+    const handle = request(server, this.getIndex());
     return sendServer(handle, data)
         .on('error', e => feed.write(e))
         .on('data', d => feed.write(d))
