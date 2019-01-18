@@ -108,27 +108,27 @@ export default function cli(errlog) {
         }
         const cmds = new Commands(ezs.parseString(script));
 
-        let environement;
+        let varenvs;
         let input;
         if (argv.env) {
-            DEBUG('Reading environement variables...');
-            environement = {};
+            DEBUG('Reading varenvs variables...');
+            varenvs = {};
             input = new PassThrough(ezs.objectMode());
             input.write(process.env);
             input.end();
         } else if (argv.input) {
             DEBUG('Reading diretory input...');
-            environement = { ...process.env };
+            varenvs = { ...process.env };
             input = ezs.load(argv.input);
         } else {
             DEBUG('Reading standard input...');
-            environement = { ...process.env };
+            varenvs = { ...process.env };
             input = process.stdin;
             input.resume();
             input.setEncoding('utf8');
         }
-
-        const servers = Array.isArray(argv.server) ? argv.server : [argv.server];
+        const server = Array.isArray(argv.server) ? argv.server : [argv.server];
+        const environement = { ...varenvs, server };
         let stream1;
         if (argv.server) {
             DEBUG('Connecting to server...');
@@ -139,7 +139,7 @@ export default function cli(errlog) {
                 if (section.func === 'pipeline') {
                     return stream.pipe(ezs.pipeline(section.cmds, environement));
                 }
-                return stream.pipe(ezs.dispatch(section.cmds, servers, environement));
+                return stream.pipe(ezs.dispatch(section.cmds, server, environement));
             }, stream0);
         } else {
             stream1 = input.pipe(ezs.pipeline(cmds.get(), environement));
