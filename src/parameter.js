@@ -1,4 +1,5 @@
 import Statement from './statement';
+import JSONezs from './json';
 
 const parametersList = {};
 
@@ -7,7 +8,7 @@ function encode(string) {
 }
 
 function decode(string) {
-    return Buffer.from(string, 'base64').toString('ascii');
+    return Buffer.from(string, 'base64').toString();
 }
 
 function pack() {
@@ -16,6 +17,10 @@ function pack() {
 
 function unpack(data) {
     return JSON.parse(decode(data));
+}
+
+function unscramble(data) {
+    return JSONezs.parse(decode(data));
 }
 
 function get(ezs, pluginName) {
@@ -44,4 +49,5 @@ export default {
     unpack,
     encode,
     decode,
+    unscramble,
 };

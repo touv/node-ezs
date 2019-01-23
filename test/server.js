@@ -32,7 +32,7 @@ class Upto extends Readable {
         }
     }
 }
-describe('through a server', () => {
+describe('dispatch through server(s)', () => {
     const server1 = ezs.createServer();
     const server2 = ezs.createServer(30001);
     const server3 = ezs.createServer(30002);
@@ -45,7 +45,7 @@ describe('through a server', () => {
         server4.close();
     });
 
-    describe('with simple pipeline', () => {
+    describe('simple statements, one server', () => {
         const script = `
             [use]
             plugin = test/locals
@@ -72,11 +72,11 @@ describe('through a server', () => {
         ];
         const server = '127.0.0.1';
 
-        it('with commands & dispatch', (done) => {
+        it('with object without group ', (done) => {
             let res = 0;
             const ten = new Upto(10);
             ten
-                .pipe(ezs.dispatch(commands, [server]))
+                .pipe(ezs('dispatch', { commands, server }))
                 .on('data', (chunk) => {
                     res += chunk;
                 })
@@ -86,14 +86,32 @@ describe('through a server', () => {
                 });
         });
 
-        it('with script & swarm (group)', (done) => {
+        it('with script with group', (done) => {
             let res = 0;
             const ten = new Upto(10);
             ten
                 .pipe(ezs('group'))
-                .pipe(ezs('swarm', {
+                .pipe(ezs('dispatch', {
                     server,
-                    string: script,
+                    script,
+                }, { toto: 1, titi: 'truc' }))
+                .on('data', (chunk) => {
+                    res += chunk;
+                })
+                .on('end', () => {
+                    assert.strictEqual(res, 54);
+                    done();
+                });
+        });
+
+        it('with file with group', (done) => {
+            let res = 0;
+            const ten = new Upto(10);
+            ten
+                .pipe(ezs('group'))
+                .pipe(ezs('dispatch', {
+                    server,
+                    file: './script.ini',
                 }))
                 .on('data', (chunk) => {
                     res += chunk;
@@ -104,14 +122,14 @@ describe('through a server', () => {
                 });
         });
 
-        it('with filescript & swarm (group)', (done) => {
+
+        it('with script without group', (done) => {
             let res = 0;
             const ten = new Upto(10);
             ten
-                .pipe(ezs('group'))
-                .pipe(ezs('swarm', {
+                .pipe(ezs('dispatch', {
                     server,
-                    script: './script.ini',
+                    script,
                 }))
                 .on('data', (chunk) => {
                     res += chunk;
@@ -122,30 +140,12 @@ describe('through a server', () => {
                 });
         });
 
-
-        it('with script & swarm (no group)', (done) => {
-            let res = 0;
-            const ten = new Upto(10);
-            ten
-                .pipe(ezs('swarm', {
-                    server,
-                    string: script,
-                }))
-                .on('data', (chunk) => {
-                    res += chunk;
-                })
-                .on('end', () => {
-                    assert.strictEqual(res, 54);
-                    done();
-                });
-        });
-
-        it('with commands & swarm (group)', (done) => {
+        it('with commands with group', (done) => {
             let res = 0;
             const ten = new Upto(10);
             ten
                 .pipe(ezs('group'))
-                .pipe(ezs('swarm', {
+                .pipe(ezs('dispatch', {
                     server,
                     commands,
                 }))
@@ -159,7 +159,7 @@ describe('through a server', () => {
         });
     });
 
-    it('with simple pipeline (N connections)', (done) => {
+    it('simple statements, N servers', (done) => {
         let res = 0;
         const commands = [
             {
@@ -175,7 +175,7 @@ describe('through a server', () => {
                 },
             },
         ];
-        const servers = [
+        const server = [
             '127.0.0.1',
             '127.0.0.1',
             '127.0.0.1',
@@ -189,7 +189,7 @@ describe('through a server', () => {
         ];
         const ten = new Upto(10);
         ten
-            .pipe(ezs.dispatch(commands, servers))
+            .pipe(ezs.dispatch(commands, server))
             .on('data', (chunk) => {
                 res += chunk;
             })
@@ -200,7 +200,7 @@ describe('through a server', () => {
     });
 
 
-    it('with second pipeline with different parameter', (done) => {
+    it('simple statements, one server but with different parameter', (done) => {
         let res = 0;
         const commands = [
             {
@@ -216,12 +216,12 @@ describe('through a server', () => {
                 },
             },
         ];
-        const servers = [
+        const server = [
             '127.0.0.1',
         ];
         const ten = new Upto(10);
         ten
-            .pipe(ezs.dispatch(commands, servers))
+            .pipe(ezs.dispatch(commands, server))
             .on('data', (chunk) => {
                 res += chunk;
             })
@@ -231,7 +231,7 @@ describe('through a server', () => {
             });
     });
 
-    it('with pipeline contains UTF8 parameter', (done) => {
+    it('with commands using args contains UTF8 parameter', (done) => {
         const res = [];
         const commands = [
             {
@@ -242,12 +242,12 @@ describe('through a server', () => {
                 },
             },
         ];
-        const servers = [
+        const server = [
             '127.0.0.1',
         ];
         const ten = new Upto(10);
         ten
-            .pipe(ezs.dispatch(commands, servers))
+            .pipe(ezs.dispatch(commands, server))
             .on('data', (chunk) => {
                 res.push(chunk);
             })
@@ -260,19 +260,19 @@ describe('through a server', () => {
     });
 
 
-    it('with pipeline with global parameter', (done) => {
+    it('with commands using global parameter', (done) => {
         let res = 0;
         const commands = [
             {
                 name: 'stepper',
             },
         ];
-        const servers = [
+        const server = [
             '127.0.0.1',
         ];
         const ten = new Upto(10);
         ten
-            .pipe(ezs.dispatch(commands, servers))
+            .pipe(ezs.dispatch(commands, server))
             .on('data', (chunk) => {
                 res += chunk;
             })
@@ -283,8 +283,7 @@ describe('through a server', () => {
     });
 
 
-    it('with buggy pipeline', (done) => {
-        let res = 0;
+    it('with buggy statements', (done) => {
         const commands = [
             {
                 name: 'increment',
@@ -299,17 +298,15 @@ describe('through a server', () => {
                 },
             },
         ];
-        const servers = [
+        const server = [
             '127.0.0.1',
         ];
         const ten = new Upto(10);
         ten
-            .pipe(ezs.dispatch(commands, servers))
-            .on('data', (chunk) => {
-                res += chunk;
-            })
-            .on('end', () => {
-                assert.strictEqual(res, 0);
+            .pipe(ezs.dispatch(commands, server))
+            .pipe(ezs.catch())
+            .on('error', (error) => {
+                assert.ok(error instanceof Error);
                 done();
             });
     });
@@ -322,13 +319,14 @@ describe('through a server', () => {
                 },
             },
         ];
-        const servers = [
+        const server = [
             '127.0.0.0',
         ];
         const ten = new Upto(10);
         let semaphore = true;
         ten
-            .pipe(ezs.dispatch(commands, servers))
+            .pipe(ezs.dispatch(commands, server))
+            .pipe(ezs.catch())
             .on('error', (error) => {
                 assert(error instanceof Error);
                 if (semaphore) {
@@ -338,7 +336,7 @@ describe('through a server', () => {
             });
     });
 
-    it('with unknowed command in the pipeline', (done) => {
+    it('with an unknowed statement', (done) => {
         const commands = [
             {
                 name: 'increment',
@@ -353,13 +351,14 @@ describe('through a server', () => {
                 },
             },
         ];
-        const servers = [
+        const server = [
             '127.0.0.1',
         ];
         const ten = new Upto(10);
         let semaphore = true;
         ten
-            .pipe(ezs.dispatch(commands, servers))
+            .pipe(ezs.dispatch(commands, server))
+            .pipe(ezs.catch())
             .on('error', (error) => {
                 assert(error instanceof Error);
                 if (semaphore) {
@@ -385,7 +384,7 @@ describe('through a server', () => {
                 },
             },
         ];
-        const servers = [
+        const server = [
             '127.0.0.1:30001',
             '127.0.0.1:30002',
             '127.0.0.1:30003',
@@ -393,7 +392,7 @@ describe('through a server', () => {
         let res = 0;
         const ten = new Upto(10);
         ten
-            .pipe(ezs.dispatch(commands, servers))
+            .pipe(ezs('dispatch', { server, commands }))
             .on('data', (chunk) => {
                 res += chunk;
             })
@@ -414,7 +413,7 @@ describe('through a server', () => {
                 },
             },
         ];
-        const servers = [
+        const server = [
             '127.0.0.1:30001',
             '127.0.0.1:30002',
             '127.0.0.1:30003',
@@ -423,7 +422,8 @@ describe('through a server', () => {
         const ten = new Upto(500001);
         ten
             .pipe(ezs('replace', { path: 'a', value: '2' }))
-            .pipe(ezs.dispatch(commands, servers))
+            .pipe(ezs('group'))
+            .pipe(ezs('dispatch', { server, commands })) // ~ 9 seconds
             .on('data', (chunk) => {
                 res += chunk.a;
             })
@@ -434,14 +434,14 @@ describe('through a server', () => {
     }).timeout(100000);
 
     it('with a lot of delayed commands in distributed pipeline', (done) => {
-        const commands = `
+        const script = `
             [use]
             plugin = test/locals
 
             [beat?${M_DISPATCH}]
 
         `;
-        const servers = [
+        const server = [
             '127.0.0.1:30001',
             '127.0.0.1:30002',
             '127.0.0.1:30003',
@@ -449,7 +449,7 @@ describe('through a server', () => {
         let res = 0;
         const ten = new Upto(10001);
         ten
-            .pipe(ezs.dispatch(ezs.parseString(commands), servers))
+            .pipe(ezs.dispatch(ezs.parseString(script), server))
             .on('data', (chunk) => {
                 res += chunk.beat;
             })
@@ -461,7 +461,7 @@ describe('through a server', () => {
 
 
     it('with a same commands', (done) => {
-        const commands = `
+        const script = `
             [use]
             plugin = test/locals
 
@@ -469,7 +469,7 @@ describe('through a server', () => {
             step = 1
 
         `;
-        const commandsOBJ1 = ezs.parseString(commands);
+        const commandsOBJ1 = ezs.parseString(script);
         const commandsSTR1 = JSONezs.stringify(commandsOBJ1);
         const commandsOBJ2 = JSONezs.parse(commandsSTR1);
         const commandsSTR2 = JSONezs.stringify(commandsOBJ2);
@@ -496,7 +496,7 @@ describe('through a server', () => {
 
 
     it('with stuck/unstuck simple pipeline', (done) => {
-        const commands = `
+        const script = `
 
             [replace]
             path = a
@@ -521,7 +521,7 @@ describe('through a server', () => {
 
             [transit]
         `;
-        const servers = [
+        const server = [
             '127.0.0.1',
         ];
         const env = {
@@ -535,7 +535,7 @@ describe('through a server', () => {
             { a: 4, b: 9 },
             { a: 5, b: 9 },
         ])
-            .pipe(ezs.dispatch(ezs.parseString(commands), servers, env))
+            .pipe(ezs('dispatch', { script, server }, env))
             .on('data', (chunk) => {
                 assert(typeof chunk === 'object');
                 res.push(chunk);

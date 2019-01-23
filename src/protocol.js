@@ -20,6 +20,7 @@ export const parseAddress = (srvr) => {
         port: Number(PORT),
     };
 };
+
 export const agent = new http.Agent({
     maxSockets: 0,
     keepAlive: false,
@@ -35,74 +36,37 @@ export const inspectServers = (servers, ns = NSHARDS) => _
     .value()
     .reduce((a, b) => a.concat(b), []); // flatten all
 
-export const registerCommands = (ezs, { hostname, port }, commands) => new Promise((resolve, reject) => {
-    const requestOptions = {
-        hostname,
-        port,
-        path: '/',
-        method: 'POST',
-        headers: {
-            'Transfer-Encoding': 'chunked',
-            'Content-Type': 'application/json',
-            'X-Parameter': Parameter.pack(),
-        },
-        agent,
-    };
-    if (!Array.isArray(commands) || commands.length === 0) {
-        return reject(new Error('No valid commands array'));
-    }
+export const registerCommands = (ezs, { hostname, port }, commands, environment = {}) => new Promise(
+    (resolve, reject) => {
+        if (!Array.isArray(commands) || commands.length === 0) {
+            return reject(new Error('No valid commands array'));
+        }
+        DEBUG(`Client will register commands to SRV//${hostname}:${port} `);
+        const serverOptions = {
+            hostname,
+            port,
+            path: '/',
+            method: 'POST',
+            headers: {
+                'Transfer-Encoding': 'chunked',
+                'Content-Type': ' application/json',
+            },
+            agent,
+        };
+        commands.forEach((command, index) => {
+            serverOptions.headers[`X-Command-${index}`] = Parameter.encode(JSON.stringify(command));
+        });
+        Object.keys(environment).forEach((keyEnv) => {
+            serverOptions.headers[`X-Environment-${keyEnv}`] = Parameter.encode(JSON.stringify(environment[keyEnv]));
+        });
+        return resolve(serverOptions);
+    },
+);
 
-    DEBUG(`Client will register commands to SRV//${hostname}:${port} `);
-    const req = http.request(requestOptions, (res) => {
-        let requestResponse = '';
-        res.setEncoding('utf8');
-        res.on('error', (error) => {
-            reject(error);
-        });
-        res.on('data', (chunk) => {
-            requestResponse += chunk;
-        });
-        res.on('end', () => {
-            try {
-                const result = JSON.parse(requestResponse);
-                DEBUG(
-                    `Client received STMT#${result} from SRV//${hostname}:${port} `,
-                );
-                resolve({
-                    hostname,
-                    port,
-                    path: `/${result}`,
-                    method: 'POST',
-                    headers: {
-                        'Transfer-Encoding': 'chunked',
-                        'Content-Type': ' application/json',
-                    },
-                    agent,
-                });
-            } catch (e) {
-                reject(e);
-            }
-        });
-    });
-    req.on('error', (e) => {
-        reject(e);
-    });
-    const input = new PassThrough(ezs.objectMode());
-    input
-        .pipe(ezs('group'))
-        .pipe(ezs('pack'))
-        .pipe(ezs.compress())
-        .pipe(req);
-    commands.forEach(command => input.write(command));
-    input.end();
-    return req;
-});
-
-export const connectServer = (ezs, environment, onerror) => (serverOptions, index) => {
+export const connectServer = ezs => (serverOptions, index) => {
     const opts = {
         ...serverOptions,
         timeout: 0,
-        headers: { ...environment },
     };
     const { hostname, port } = opts;
     const input = new PassThrough(ezs.objectMode());
@@ -122,19 +86,18 @@ export const connectServer = (ezs, environment, onerror) => (serverOptions, inde
         if (res.statusCode === 400) {
             DEBUG(`Unable to execute STMP#${opts.path.slice(1)} with SRV//${hostname}:${port}#${index}`);
             const errmsg = Parameter.decode(res.headers['x-error']);
-            onerror(new Error(`Server sent:\n ${errmsg}`));
-            res.close();
+            output.write(new Error(`Server sent:\n ${errmsg}`));
             output.end();
             return 2;
         }
-        onerror(new Error(
+        output.write(new Error(
             `SRV//${hostname}:${port}#${index} return ${res.statusCode}`,
         ));
         return 3;
     });
 
     handle.on('error', (e) => {
-        onerror(new Error(
+        output.write(new Error(
             `SRV//${hostname || '?'}:${port || '?'}#${index} return ${e.message}`,
         ));
         output.end();

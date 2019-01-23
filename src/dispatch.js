@@ -46,12 +46,15 @@ export default class Dispatch extends Duplex {
     _write(chunk, encoding, callback) {
         if (this.semaphore) {
             this.semaphore = false;
-            pMap(this.servers, server => registerCommands(this.ezs, server, this.commands).catch((e) => {
+            pMap(this.servers, server => registerCommands(
+                this.ezs,
+                server,
+                this.commands,
+                this.environment,
+            ).catch((e) => {
                 DEBUG(`Unable to regsister commands with the server: ${server}`, e);
             })).then((workers) => {
-                this.handles = workers.map(connectServer(this.ezs, this.environment, (e) => {
-                    this.emit('error', e);
-                }));
+                this.handles = workers.map(connectServer(this.ezs));
                 const streams = this.handles.map(h => h[1]);
                 MultiStream(streams, this.ezs.objectMode()).pipe(this.tubin);
                 this.balance(chunk, encoding, callback);
