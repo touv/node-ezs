@@ -1,7 +1,6 @@
 import { PassThrough } from 'stream';
 import Engine from './engine';
 import Pipeline from './pipeline';
-import Dispatch from './dispatch';
 import Single from './single';
 import Script from './script';
 import File from './file';
@@ -42,7 +41,6 @@ ezs.bytesMode = () => ({
 ezs.constants = { M_SINGLE, M_DISPATCH, M_NORMAL };
 ezs.config = (name, options) => Parameter.set(ezs, name, options);
 ezs.pipeline = (commands, environment) => new Pipeline(ezs, commands, environment);
-ezs.dispatch = (commands, servers, environment) => new Dispatch(ezs, commands, servers, environment);
 ezs.exec = (name, options, environment) => new Engine(ezs, Statement.get(ezs, name, options), options, environment);
 ezs.execOnce = (mixed, options, environment) => new Single(ezs, mixed, options, environment);
 ezs.metaString = (commands, options) => new Meta(ezs, commands, options);

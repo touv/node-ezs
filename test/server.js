@@ -189,7 +189,7 @@ describe('dispatch through server(s)', () => {
         ];
         const ten = new Upto(10);
         ten
-            .pipe(ezs.dispatch(commands, server))
+            .pipe(ezs('dispatch', { commands, server }))
             .on('data', (chunk) => {
                 res += chunk;
             })
@@ -221,7 +221,7 @@ describe('dispatch through server(s)', () => {
         ];
         const ten = new Upto(10);
         ten
-            .pipe(ezs.dispatch(commands, server))
+            .pipe(ezs('dispatch', { commands, server }))
             .on('data', (chunk) => {
                 res += chunk;
             })
@@ -247,7 +247,7 @@ describe('dispatch through server(s)', () => {
         ];
         const ten = new Upto(10);
         ten
-            .pipe(ezs.dispatch(commands, server))
+            .pipe(ezs('dispatch', { commands, server }))
             .on('data', (chunk) => {
                 res.push(chunk);
             })
@@ -272,7 +272,7 @@ describe('dispatch through server(s)', () => {
         ];
         const ten = new Upto(10);
         ten
-            .pipe(ezs.dispatch(commands, server))
+            .pipe(ezs('dispatch', { commands, server }))
             .on('data', (chunk) => {
                 res += chunk;
             })
@@ -303,7 +303,7 @@ describe('dispatch through server(s)', () => {
         ];
         const ten = new Upto(10);
         ten
-            .pipe(ezs.dispatch(commands, server))
+            .pipe(ezs('dispatch', { commands, server }))
             .pipe(ezs.catch())
             .on('error', (error) => {
                 assert.ok(error instanceof Error);
@@ -325,7 +325,7 @@ describe('dispatch through server(s)', () => {
         const ten = new Upto(10);
         let semaphore = true;
         ten
-            .pipe(ezs.dispatch(commands, server))
+            .pipe(ezs('dispatch', { commands, server }))
             .pipe(ezs.catch())
             .on('error', (error) => {
                 assert(error instanceof Error);
@@ -357,7 +357,7 @@ describe('dispatch through server(s)', () => {
         const ten = new Upto(10);
         let semaphore = true;
         ten
-            .pipe(ezs.dispatch(commands, server))
+            .pipe(ezs('dispatch', { commands, server }))
             .pipe(ezs.catch())
             .on('error', (error) => {
                 assert(error instanceof Error);
@@ -449,7 +449,7 @@ describe('dispatch through server(s)', () => {
         let res = 0;
         const ten = new Upto(10001);
         ten
-            .pipe(ezs.dispatch(ezs.parseString(script), server))
+            .pipe(ezs('dispatch', { script, server }))
             .on('data', (chunk) => {
                 res += chunk.beat;
             })
