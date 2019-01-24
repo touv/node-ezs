@@ -139,7 +139,13 @@ export default function cli(errlog) {
                 if (section.func === 'pipeline') {
                     return stream.pipe(ezs.pipeline(section.cmds, environement));
                 }
-                return stream.pipe(ezs('dispatch', { commands: section.cmds, server, environement }));
+                return stream
+                    .pipe(ezs('group'))
+                    .pipe(ezs('dispatch', {
+                        commands: section.cmds,
+                        server,
+                        environement,
+                    }));
             }, stream0);
         } else {
             stream1 = input.pipe(ezs.pipeline(cmds.get(), environement));

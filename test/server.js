@@ -555,6 +555,50 @@ describe('dispatch through server(s)', () => {
             });
     });
 
+    it.only('an array of array in a pipeline', (done) => {
+        const script = `
+            [transit]
+        `;
+        const server = [
+            '127.0.0.1',
+        ];
+        const res = [];
+        from([
+            [1, 1, 1, 1],
+            [2, 2, 2, 2],
+            [3, 3, 3, 3],
+            [4, 4, 4, 4],
+            [5, 5, 5, 5],
+        ])
+            .pipe(ezs('group', { size: 2 }))
+            .pipe(ezs('dispatch', { script, server }))
+            .on('data', (chunk) => {
+                assert(Array.isArray(chunk));
+                res.push(chunk);
+            })
+            .on('end', () => {
+                assert.equal(5, res.length);
+                assert.equal(4, res[0].length);
+                assert.equal(4, res[1].length);
+                assert.equal(4, res[2].length);
+                assert.equal(4, res[3].length);
+                assert.equal(4, res[4].length);
+                assert.equal(1, res[0][0]);
+                assert.equal(1, res[0][1]);
+                assert.equal(1, res[0][2]);
+                assert.equal(1, res[0][3]);
+                assert.equal(2, res[1][0]);
+                assert.equal(2, res[1][1]);
+                assert.equal(2, res[1][2]);
+                assert.equal(2, res[1][3]);
+                assert.equal(5, res[4][0]);
+                assert.equal(5, res[4][1]);
+                assert.equal(5, res[4][2]);
+                assert.equal(5, res[4][3]);
+                done();
+            });
+    });
+
 
     /**/
 });
