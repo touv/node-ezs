@@ -1,7 +1,6 @@
 import { PassThrough } from 'stream';
 import pumpify from 'pumpify';
 import Engine from './engine';
-import Pipeline from './pipeline';
 import Single from './single';
 import Script from './script';
 import File from './file';
