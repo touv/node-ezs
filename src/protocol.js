@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { PassThrough } from 'stream';
 import http from 'http';
 import Parameter from './parameter';
@@ -27,13 +26,13 @@ export const agent = new http.Agent({
     timeout: 0,
 });
 
-export const inspectServers = (servers, ns = NSHARDS) => _
-    .chain(Array.isArray(servers) ? servers : [servers])
-    .compact()
-    .uniq()
+export const ensureArray = a => (Array.isArray(a) ? a : [a]);
+
+export const inspectServers = (servers, ns = NSHARDS) => ensureArray(servers)
+    .filter(Boolean)
+    .filter((elem, pos, arr) => arr.indexOf(elem) === pos)
     .map(parseAddress)
     .map(s => Array(ns).fill(s)) // multiple each line
-    .value()
     .reduce((a, b) => a.concat(b), []); // flatten all
 
 export const registerCommands = (ezs, { hostname, port }, commands, environment = {}) => new Promise(
@@ -41,7 +40,6 @@ export const registerCommands = (ezs, { hostname, port }, commands, environment 
         if (!Array.isArray(commands) || commands.length === 0) {
             return reject(new Error('No valid commands array'));
         }
-        DEBUG(`Client will register commands to SRV//${hostname}:${port} `);
         const serverOptions = {
             hostname,
             port,
@@ -71,34 +69,31 @@ export const connectServer = ezs => (serverOptions, index) => {
     const { hostname, port } = opts;
     const input = new PassThrough(ezs.objectMode());
     const output = new PassThrough(ezs.objectMode());
-    DEBUG(`Client will send data to SRV//${hostname}:${port} `);
     const handle = http.request(opts, (res) => {
-        DEBUG(`Client receive ${res.statusCode}`);
+        DEBUG(`http://${hostname}:${port} send code ${res.statusCode}`);
         if (res.statusCode === 200) {
             res
                 .pipe(ezs.uncompress())
                 .pipe(ezs('unpack'))
                 .pipe(ezs('ungroup'))
-                .on('data', chunk => output.write(chunk))
-                .on('end', () => output.end());
+                .pipe(output);
             return 1;
         }
         if (res.statusCode === 400) {
-            DEBUG(`Unable to execute STMP#${opts.path.slice(1)} with SRV//${hostname}:${port}#${index}`);
             const errmsg = Parameter.decode(res.headers['x-error']);
-            output.write(new Error(`Server sent:\n ${errmsg}`));
+            output.write(new Error(`Server sent: ${errmsg}`));
             output.end();
             return 2;
         }
         output.write(new Error(
-            `SRV//${hostname}:${port}#${index} return ${res.statusCode}`,
+            `http://${hostname}:${port} at item #${index} return ${res.statusCode}`,
         ));
         return 3;
     });
 
     handle.on('error', (e) => {
         output.write(new Error(
-            `SRV//${hostname || '?'}:${port || '?'}#${index} return ${e.message}`,
+            `http://${hostname || '?'}:${port || '?'} at item #${index} return ${e.message}`,
         ));
         output.end();
         handle.abort();
@@ -107,6 +102,7 @@ export const connectServer = ezs => (serverOptions, index) => {
     handle.setNoDelay(false);
 
     input
+        .pipe(ezs('group'))
         .pipe(ezs('pack'))
         .pipe(ezs.compress())
         .pipe(handle);
@@ -119,3 +115,13 @@ export const sendServer = (handle, data) => {
     handle[0].end();
     return handle[1];
 };
+
+export function writeTo(stream, data, cb) {
+    const check = stream.write(data);
+    if (!check) {
+        stream.once('drain', cb);
+    } else {
+        process.nextTick(cb);
+    }
+    return check;
+}

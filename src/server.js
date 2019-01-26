@@ -27,7 +27,7 @@ function createServer(ezs, store, port = PORT) {
                             [environmentKey]: Parameter.unpack(headers[`x-environment-${environmentKey}`]),
                         }))
                         .reduce((prev, cur) => Object.assign(prev, cur), {});
-                    DEBUG('Server will execute commands');
+                    DEBUG(`PID ${process.pid} will execute ${commands.length || 0} commands with ${environment.length || 0} global parameters`);
                     const processor = ezs.pipeline(commands, environment);
                     request
                         .pipe(ezs.uncompress())

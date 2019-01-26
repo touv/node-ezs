@@ -7,10 +7,22 @@ import {
     registerCommands,
     inspectServers,
     connectServer,
+    writeTo,
 } from '../protocol';
 
-export default function dispatch(data, feed, idx) {
+export default function dispatch(data, feed) {
     const { ezs } = this;
+    const writeHandle = (dta, cb) => {
+        if (this.lastIndex >= this.handles.length) {
+            this.lastIndex = 0;
+        }
+        DEBUG(`Write ${dta.length} items into handle #${this.lastIndex}/${this.handles.length}`);
+        const check = writeTo(this.handles[this.lastIndex][0], dta, () => true);
+        if (!check) {
+            this.lastIndex += 1;
+        }
+        cb();
+    };
     if (this.isFirst()) {
         this.lastIndex = 0;
         const servers = inspectServers(this.getParam('server', []));
@@ -20,7 +32,7 @@ export default function dispatch(data, feed, idx) {
         const commands = this.getParam('commands', cmds.get());
 
         if (!servers || servers.length === 0 || !commands || commands.length === 0) {
-            return feed.stop(new Error('Invalid parmeter for swarm'));
+            return feed.stop(new Error('Invalid parmeter for dispatch'));
         }
         this.whenReady = pMap(servers, server => registerCommands(ezs, server, commands, this.getEnv())
             .catch((e) => {
@@ -44,13 +56,16 @@ export default function dispatch(data, feed, idx) {
     if (this.isLast()) {
         this.whenReady
             .then(() => {
-                this.whenFinish
-                    .then(() => feed.close())
-                    .catch((e) => {
-                        DEBUG('Unable to close the dispatcher', e);
-                        feed.stop(e);
-                    });
-                this.handles.forEach(handle => handle[0].end());
+                const closeAll = () => {
+                    this.whenFinish
+                        .then(() => feed.close())
+                        .catch((e) => {
+                            DEBUG('Unable to close the dispatcher', e);
+                            feed.stop(e);
+                        });
+                    this.handles.forEach(handle => handle[0].end());
+                };
+                return closeAll();
             })
             .catch((e) => {
                 DEBUG('Unable to open the dispatcher', e);
@@ -59,17 +74,12 @@ export default function dispatch(data, feed, idx) {
     } else {
         this.whenReady
             .then(() => {
-                this.lastIndex += 1;
-                if (this.lastIndex >= this.handles.length) {
-                    this.lastIndex = 0;
-                }
-                this.handles[this.lastIndex][0].write(data);
+                writeHandle(data, () => feed.end());
             })
             .catch((e) => {
                 DEBUG('Unable to open the dispatcher', e);
                 feed.stop(e);
             });
-        feed.end();
     }
     return 1;
 }
