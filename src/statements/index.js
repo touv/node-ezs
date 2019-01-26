@@ -12,8 +12,8 @@ import shuffle from './shuffle';
 import env from './env';
 import group from './group';
 import ungroup from './ungroup';
-import swarm from './swarm';
 import dispatch from './dispatch';
+import tracer from './tracer';
 
 export default {
     extract,
@@ -30,6 +30,6 @@ export default {
     env,
     group,
     ungroup,
-    swarm,
     dispatch,
+    tracer,
 };
