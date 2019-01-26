@@ -137,18 +137,31 @@ export default function cli(errlog) {
             const stream0 = usecmds.reduce(ezs.command, input);
             stream1 = runplan.reduce((stream, section) => {
                 if (section.func === 'pipeline') {
-                    return stream.pipe(ezs.pipeline(section.cmds, environement));
+                    return stream
+                        .pipe(ezs.pipeline(section.cmds, environement))
+                        .pipe(ezs.catch((e) => {
+                            errlog(e.message.split('\n').shift());
+                            process.exit(2);
+                        }));
                 }
                 return stream
-                    .pipe(ezs('group'))
                     .pipe(ezs('dispatch', {
                         commands: section.cmds,
                         server,
                         environement,
+                    }))
+                    .pipe(ezs.catch((e) => {
+                        errlog(e.message.split('\n').shift());
+                        process.exit(2);
                     }));
             }, stream0);
         } else {
-            stream1 = input.pipe(ezs.pipeline(cmds.get(), environement));
+            stream1 = input
+                .pipe(ezs.pipeline(cmds.get(), environement))
+                .pipe(ezs.catch((e) => {
+                    errlog(e.message.split('\n').shift());
+                    process.exit(2);
+                }));
         }
         if (argv.output) {
             const stream2a = stream1.pipe(ezs.save(argv.output));
