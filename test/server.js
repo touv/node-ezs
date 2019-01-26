@@ -72,7 +72,7 @@ describe('dispatch through server(s)', () => {
         ];
         const server = '127.0.0.1';
 
-        it('with object without group ', (done) => {
+        it('with object', (done) => {
             let res = 0;
             const ten = new Upto(10);
             ten
@@ -86,11 +86,10 @@ describe('dispatch through server(s)', () => {
                 });
         });
 
-        it('with script with group', (done) => {
+        it('with script', (done) => {
             let res = 0;
             const ten = new Upto(10);
             ten
-                .pipe(ezs('group'))
                 .pipe(ezs('dispatch', {
                     server,
                     script,
@@ -104,11 +103,10 @@ describe('dispatch through server(s)', () => {
                 });
         });
 
-        it('with file with group', (done) => {
+        it('with file', (done) => {
             let res = 0;
             const ten = new Upto(10);
             ten
-                .pipe(ezs('group'))
                 .pipe(ezs('dispatch', {
                     server,
                     file: './script.ini',
@@ -123,7 +121,7 @@ describe('dispatch through server(s)', () => {
         });
 
 
-        it('with script without group', (done) => {
+        it('with script', (done) => {
             let res = 0;
             const ten = new Upto(10);
             ten
@@ -140,11 +138,10 @@ describe('dispatch through server(s)', () => {
                 });
         });
 
-        it('with commands with group', (done) => {
+        it('with commands', (done) => {
             let res = 0;
             const ten = new Upto(10);
             ten
-                .pipe(ezs('group'))
                 .pipe(ezs('dispatch', {
                     server,
                     commands,
@@ -422,7 +419,6 @@ describe('dispatch through server(s)', () => {
         const ten = new Upto(500001);
         ten
             .pipe(ezs('replace', { path: 'a', value: '2' }))
-            .pipe(ezs('group'))
             .pipe(ezs('dispatch', { server, commands })) // ~ 9 seconds
             .on('data', (chunk) => {
                 res += chunk.a;
@@ -555,7 +551,7 @@ describe('dispatch through server(s)', () => {
             });
     });
 
-    it.only('an array of array in a pipeline', (done) => {
+    it('an array of array in a pipeline', (done) => {
         const script = `
             [transit]
         `;
@@ -570,7 +566,6 @@ describe('dispatch through server(s)', () => {
             [4, 4, 4, 4],
             [5, 5, 5, 5],
         ])
-            .pipe(ezs('group', { size: 2 }))
             .pipe(ezs('dispatch', { script, server }))
             .on('data', (chunk) => {
                 assert(Array.isArray(chunk));
