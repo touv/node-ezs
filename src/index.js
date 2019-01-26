@@ -1,4 +1,5 @@
 import { PassThrough } from 'stream';
+import pumpify from 'pumpify';
 import Engine from './engine';
 import Pipeline from './pipeline';
 import Single from './single';
@@ -40,30 +41,46 @@ ezs.bytesMode = () => ({
 });
 ezs.constants = { M_SINGLE, M_DISPATCH, M_NORMAL };
 ezs.config = (name, options) => Parameter.set(ezs, name, options);
-ezs.pipeline = (commands, environment) => new Pipeline(ezs, commands, environment);
+ezs.pipeline = (commands, environment) => {
+    if (!Array.isArray(commands)) {
+        throw new Error('Pipeline works with an array of commands.');
+    }
+    const cmds = [...commands];
+    cmds.push({
+        mode: M_NORMAL,
+        name: 'transit',
+        args: { },
+    });
+    const streams = cmds.map(command => ezs.createCommand(command, environment));
+    if (streams.length === 1) {
+        return new PassThrough(ezs.objectMode());
+    }
+    return pumpify.obj(streams);
+};
 ezs.exec = (name, options, environment) => new Engine(ezs, Statement.get(ezs, name, options), options, environment);
 ezs.execOnce = (mixed, options, environment) => new Single(ezs, mixed, options, environment);
 ezs.metaString = (commands, options) => new Meta(ezs, commands, options);
 ezs.metaFile = (filename, options) => new Meta(ezs, File(ezs, filename), options);
 ezs.parseString = commands => Script(commands);
-ezs.fromString = (commands, environment) => new Pipeline(ezs, Script(commands), environment);
+ezs.fromString = (commands, environment) => ezs.pipeline(Script(commands), environment);
 ezs.parseFile = filename => Script(File(ezs, filename));
-ezs.fromFile = (filename, environment) => new Pipeline(ezs, Script(File(ezs, filename)), environment);
+ezs.fromFile = (filename, environment) => ezs.pipeline(Script(File(ezs, filename)), environment);
 ezs.catch = func => new Catcher(func);
 ezs.toBuffer = options => new Output(options);
 ezs.use = plugin => Statement.set(ezs, plugin);
 ezs.addPath = p => ezsPath.push(p);
 ezs.getPath = () => ezsPath;
-ezs.command = (stream, command, environment) => {
+ezs.command = (stream, command, environment) => stream.pipe(ezs.createCommand(command, environment));
+ezs.createCommand = (command, environment) => {
     const mode = command.mode || M_NORMAL;
     if (!command.name) {
         throw new Error(`Bad command : ${command.name}`);
     }
     if (mode === M_NORMAL || mode === M_DISPATCH) {
-        return stream.pipe(ezs.exec(command.name, command.args, environment));
+        return ezs.exec(command.name, command.args, environment);
     }
     if (mode === M_SINGLE || mode === 'single' /* Backward compatibility */) {
-        return stream.pipe(ezs.execOnce(command.name, command.args, environment));
+        return ezs.execOnce(command.name, command.args, environment);
     }
     throw new Error(`Bad mode: ${mode}`);
 };
