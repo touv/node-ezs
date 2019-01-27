@@ -6,7 +6,7 @@ import {
     inspectServers,
     connectServer,
     writeTo,
-} from '../protocol';
+} from '../client';
 
 export default function dispatch(data, feed) {
     const { ezs } = this;
