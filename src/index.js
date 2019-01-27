@@ -17,7 +17,7 @@ import Meta from './meta';
 import Server from './server';
 import { compressStream, uncompressStream } from './compactor';
 import {
-    M_SINGLE, M_DISPATCH, M_NORMAL, HWM_BYTES, HWM_OBJECT, NSHARDS,
+    M_SINGLE, M_DISPATCH, M_NORMAL, HWM_BYTES, HWM_OBJECT, NSHARDS, A_ENCODING,
 } from './constants';
 
 const ezs = (name, options, environment) => new Engine(ezs, Statement.get(ezs, name, options), options, environment);
@@ -29,6 +29,7 @@ ezs.settings = {
         HWM_BYTES,
     ],
     nShards: NSHARDS,
+    encoding: A_ENCODING,
 };
 ezs.objectMode = () => ({
     objectMode: true,
@@ -37,6 +38,9 @@ ezs.objectMode = () => ({
 ezs.bytesMode = () => ({
     objectMode: false,
     highWaterMark: Number(ezs.settings.highWaterMark[1]) || HWM_BYTES,
+});
+ezs.encodingMode = () => ({
+    'Content-Encoding': String(ezs.settings.encoding) || A_ENCODING,
 });
 ezs.constants = { M_SINGLE, M_DISPATCH, M_NORMAL };
 ezs.config = (name, options) => Parameter.set(ezs, name, options);

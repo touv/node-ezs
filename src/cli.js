@@ -47,6 +47,12 @@ export default function cli(errlog) {
                 type: 'number',
                 default: NSHARDS,
             },
+            identity: {
+                alias: 'i',
+                default: false,
+                describe: 'No transformation is used during transfers',
+                type: 'boolean',
+            },
             env: {
                 alias: 'e',
                 default: false,
@@ -90,6 +96,9 @@ export default function cli(errlog) {
         process.exit(1);
     }
 
+    if (argv.identity) {
+        ezs.settings.encoding = 'identity';
+    }
 
     if (firstarg) {
         let file;

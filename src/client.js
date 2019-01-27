@@ -21,7 +21,7 @@ export const parseAddress = (commands, environment) => (srvr) => {
         method: 'POST',
         headers: {
             'Transfer-Encoding': 'chunked',
-            'Content-Type': ' application/json',
+            'Content-Type': 'application/json',
         },
         agent,
     };
@@ -53,6 +53,10 @@ export const inspectServers = (servers, commands, environment, ns = NSHARDS) => 
 export const connectServer = ezs => (serverOptions, index) => {
     const { hostname, port } = serverOptions;
     let connected = false;
+    serverOptions.headers = {
+        ...ezs.encodingMode(),
+        ...serverOptions.headers,
+    };
     const input = new PassThrough(ezs.objectMode());
     const output = new PassThrough(ezs.objectMode());
     const handle = http.request(serverOptions, (res) => {
@@ -60,7 +64,7 @@ export const connectServer = ezs => (serverOptions, index) => {
         DEBUG(`http://${hostname}:${port} send code ${res.statusCode}`);
         if (res.statusCode === 200) {
             res
-                .pipe(ezs.uncompress())
+                .pipe(ezs.uncompress(res.headers))
                 .pipe(ezs('unpack'))
                 .pipe(ezs('ungroup'))
                 .pipe(output);
@@ -93,7 +97,7 @@ export const connectServer = ezs => (serverOptions, index) => {
     input
         .pipe(ezs('group'))
         .pipe(ezs('pack'))
-        .pipe(ezs.compress())
+        .pipe(ezs.compress(ezs.encodingMode()))
         .pipe(handle);
     const duplex = [input, output];
     return duplex;

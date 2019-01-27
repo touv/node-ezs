@@ -15,6 +15,7 @@ function createServer(ezs, store, port = PORT) {
             response.socket.setNoDelay(false);
             if (url === '/' && method === 'POST') {
                 try {
+                    response.setHeader('Content-Encoding', headers['content-encoding']);
                     const commands = Object.keys(headers)
                         .filter(headerKey => (headerKey.indexOf('x-command') === 0))
                         .map(headerKey => parseInt(headerKey.replace('x-command-', ''), 10))
@@ -30,7 +31,7 @@ function createServer(ezs, store, port = PORT) {
                     DEBUG(`PID ${process.pid} will execute ${commands.length || 0} commands with ${environment.length || 0} global parameters`);
                     const processor = ezs.pipeline(commands, environment);
                     request
-                        .pipe(ezs.uncompress())
+                        .pipe(ezs.uncompress(headers))
                         .pipe(ezs('unpack'))
                         .pipe(ezs('ungroup'))
                         .pipe(processor)
@@ -49,7 +50,7 @@ function createServer(ezs, store, port = PORT) {
                         }))
                         .pipe(ezs('group'))
                         .pipe(ezs('pack'))
-                        .pipe(ezs.compress())
+                        .pipe(ezs.compress(headers))
                         .pipe(response);
                     request.resume();
                 } catch (error) {
