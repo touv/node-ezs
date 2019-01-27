@@ -2,7 +2,7 @@ import fs from 'fs';
 import { PassThrough } from 'stream';
 import yargs from 'yargs';
 import debug from 'debug';
-import { DEBUG } from './constants';
+import { DEBUG, NSHARDS, HWM_BYTES, HWM_OBJECT } from './constants';
 import ezs from '.';
 import Commands from './commands';
 import File from './file';
@@ -39,12 +39,13 @@ export default function cli(errlog) {
             },
             highWaterMark: {
                 describe: 'Change high water mark',
-                default: '16:16384',
+                default: `${HWM_OBJECT}:${HWM_BYTES}`,
                 type: 'string',
             },
             nShards: {
                 describe: 'Change number of shards',
                 type: 'number',
+                default: NSHARDS,
             },
             env: {
                 alias: 'e',
