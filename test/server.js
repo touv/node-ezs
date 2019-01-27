@@ -77,6 +77,7 @@ describe('dispatch through server(s)', () => {
             const ten = new Upto(10);
             ten
                 .pipe(ezs('dispatch', { commands, server }))
+                .pipe(ezs('debug'))
                 .on('data', (chunk) => {
                     res += chunk;
                 })
@@ -187,6 +188,7 @@ describe('dispatch through server(s)', () => {
         const ten = new Upto(10);
         ten
             .pipe(ezs('dispatch', { commands, server }))
+            .pipe(ezs.catch())
             .on('data', (chunk) => {
                 res += chunk;
             })
@@ -360,6 +362,7 @@ describe('dispatch through server(s)', () => {
                 assert(error instanceof Error);
                 if (semaphore) {
                     semaphore = false;
+                    ten.destroy();
                     done();
                 }
             });
