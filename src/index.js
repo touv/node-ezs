@@ -10,8 +10,6 @@ import Catcher from './catcher';
 import Statements from './statements';
 import Parameter from './parameter';
 import Statement from './statement';
-import IsolatedStore from './isolated-store';
-import SharedStore from './shared-store';
 import Meta from './meta';
 import Server from './server';
 import { compressStream, uncompressStream } from './compactor';
@@ -91,8 +89,8 @@ ezs.uncompress = options => uncompressStream(ezs, options);
 ezs.createStream = options => new PassThrough(options);
 
 ezs.createCache = options => new Cache(ezs, options);
-ezs.createServer = port => Server.createServer(ezs, new IsolatedStore(), port);
-ezs.createCluster = port => Server.createCluster(ezs, new SharedStore(), port);
+ezs.createServer = port => Server.createServer(ezs, port);
+ezs.createCluster = port => Server.createCluster(ezs, port);
 
 ezs.use(Statements);
 

@@ -7,7 +7,7 @@ import Parameter from './parameter';
 
 const signals = ['SIGINT', 'SIGTERM'];
 
-function createServer(ezs, store, port = PORT) {
+function createServer(ezs, port = PORT) {
     const startedAt = Date.now();
     const server = http
         .createServer((request, response) => {
@@ -88,7 +88,7 @@ function createServer(ezs, store, port = PORT) {
     return server;
 }
 
-function createCluster(ezs, store, port) {
+function createCluster(ezs, port) {
     let term = false;
     if (cluster.isMaster) {
         for (let i = 0; i < NCPUS; i += 1) {
@@ -106,7 +106,7 @@ function createCluster(ezs, store, port) {
             });
         });
     } else {
-        createServer(ezs, store, port);
+        createServer(ezs, port);
     }
     return cluster;
 }
