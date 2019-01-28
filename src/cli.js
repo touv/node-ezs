@@ -2,7 +2,7 @@ import fs from 'fs';
 import { PassThrough } from 'stream';
 import yargs from 'yargs';
 import debug from 'debug';
-import { DEBUG, NSHARDS, HWM_BYTES, HWM_OBJECT } from './constants';
+import { DEBUG, NSHARDS, HWM_BYTES, HWM_OBJECT, A_ENCODING } from './constants';
 import ezs from '.';
 import Commands from './commands';
 import File from './file';
@@ -47,11 +47,11 @@ export default function cli(errlog) {
                 type: 'number',
                 default: NSHARDS,
             },
-            identity: {
-                alias: 'i',
-                default: false,
-                describe: 'No transformation is used during transfers',
-                type: 'boolean',
+            encoding: {
+                alias: 'z',
+                type: 'string',
+                default: A_ENCODING,
+                describe: 'Change the compression scheme to improve transfers',
             },
             env: {
                 alias: 'e',
@@ -96,8 +96,8 @@ export default function cli(errlog) {
         process.exit(1);
     }
 
-    if (argv.identity) {
-        ezs.settings.encoding = 'identity';
+    if (argv.encoding) {
+        ezs.settings.encoding = argv.encoding;
     }
 
     if (firstarg) {
