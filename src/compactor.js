@@ -24,8 +24,8 @@ const chooseZ = () => {
 
 const z = chooseZ();
 
-export function compressStream(ezs, opts) {
-    const encoding = opts['Content-Encoding'] || opts['content-encoding'];
+export function compressStream(ezs, opts = {}) {
+    const encoding = opts['Content-Encoding'] || opts['content-encoding'] || 'identity';
     if (typeof z.createGunzip === 'function' && encoding === 'gzip') {
         DEBUG('ezs will use zlib to compress stream.');
         return z.createGzip();
@@ -37,8 +37,8 @@ export function compressStream(ezs, opts) {
     return new PassThrough(ezs.bytesMode());
 }
 
-export function uncompressStream(ezs, opts) {
-    const encoding = opts['Content-Encoding'] || opts['content-encoding'];
+export function uncompressStream(ezs, opts = {}) {
+    const encoding = opts['Content-Encoding'] || opts['content-encoding'] || 'identity';
     if (typeof z.createGunzip === 'function' && encoding === 'gzip') {
         DEBUG('ezs will use zlib to uncompress stream.');
         return z.createGunzip();

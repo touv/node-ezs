@@ -59,17 +59,6 @@ export default function cli(errlog) {
                 describe: 'Execute commands with environement variables as input',
                 type: 'boolean',
             },
-            input: {
-                alias: 'i',
-                describe: 'Execute commands with a dedicated directory as input',
-                type: 'string',
-            },
-            output: {
-                alias: 'o',
-                describe: 'Save result output to a dedicated directory',
-                type: 'string',
-            },
-
         })
         .epilogue('for more information, find our manual at https://github.com/touv/node-ezs');
 
@@ -126,10 +115,6 @@ export default function cli(errlog) {
             input = new PassThrough(ezs.objectMode());
             input.write(process.env);
             input.end();
-        } else if (argv.input) {
-            DEBUG('Reading diretory input...');
-            varenvs = { ...process.env };
-            input = ezs.load(argv.input);
         } else {
             DEBUG('Reading standard input...');
             varenvs = { ...process.env };
@@ -173,18 +158,11 @@ export default function cli(errlog) {
                     process.exit(2);
                 }));
         }
-        if (argv.output) {
-            const stream2a = stream1.pipe(ezs.save(argv.output));
-            stream2a.on('end', () => {
-                process.exit(0);
-            });
-        } else {
-            const stream2b = stream1.pipe(ezs.toBuffer());
-            stream2b.on('end', () => {
-                process.exit(0);
-            });
-            stream2b.pipe(process.stdout);
-        }
+        const stream2 = stream1.pipe(ezs.toBuffer());
+        stream2.on('end', () => {
+            process.exit(0);
+        });
+        stream2.pipe(process.stdout);
     }
     return argv;
 }

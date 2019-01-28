@@ -12,7 +12,6 @@ import Parameter from './parameter';
 import Statement from './statement';
 import IsolatedStore from './isolated-store';
 import SharedStore from './shared-store';
-import { Writer, Reader } from './disk';
 import Meta from './meta';
 import Server from './server';
 import { compressStream, uncompressStream } from './compactor';
@@ -87,8 +86,6 @@ ezs.createCommand = (command, environment) => {
     }
     throw new Error(`Bad mode: ${mode}`);
 };
-ezs.save = (path, options) => new Writer(ezs, path, options);
-ezs.load = (path, options) => new Reader(ezs, path, options);
 ezs.compress = options => compressStream(ezs, options);
 ezs.uncompress = options => uncompressStream(ezs, options);
 ezs.createStream = options => new PassThrough(options);
