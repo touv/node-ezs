@@ -2,6 +2,7 @@ import path from 'path';
 import { PassThrough } from 'stream';
 import pumpify from 'pumpify';
 import Engine from './engine';
+import booster from './booster';
 import Single from './single';
 import Script from './script';
 import File from './file';
@@ -60,6 +61,7 @@ ezs.pipeline = (commands, environment) => {
     }
     return pumpify.obj(streams);
 };
+ezs.booster = (commands, environment) => booster(ezs, ezs.pipeline(commands, environment));
 ezs.exec = (name, options, environment) => new Engine(ezs, Statement.get(ezs, name, options), options, environment);
 ezs.execOnce = (mixed, options, environment) => new Single(ezs, mixed, options, environment);
 ezs.metaString = (commands, options) => new Meta(ezs, commands, options);
