@@ -61,7 +61,7 @@ ezs.pipeline = (commands, environment) => {
     }
     return pumpify.obj(streams);
 };
-ezs.booster = (commands, environment) => booster(ezs, ezs.pipeline(commands, environment));
+ezs.booster = (commands, environment) => booster(ezs, commands, environment);
 ezs.exec = (name, options, environment) => new Engine(ezs, Statement.get(ezs, name, options), options, environment);
 ezs.execOnce = (mixed, options, environment) => new Single(ezs, mixed, options, environment);
 ezs.metaString = (commands, options) => new Meta(ezs, commands, options);

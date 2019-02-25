@@ -1,5 +1,4 @@
 import os from 'os';
-import path from 'path';
 import LRU from 'keyv-lru-files';
 import { Duplex, PassThrough } from 'stream';
 import hasher from 'node-object-hash';
@@ -17,10 +16,12 @@ const cache = new LRU({
 cache.opts.dir = os.tmpdir();
 
 class Booster extends Duplex {
-    constructor(ezs, pipeline) {
+    constructor(ezs, commands, environment) {
         super(ezs.objectMode());
         this.ezs = ezs;
-        this.pipeline = pipeline;
+        this.commandsHash = hashCoerce.hash(commands);
+        this.environmentHash = hashCoerce.hash(environment);
+        this.pipeline = ezs.pipeline(commands, environment);
         this.firstWrite = true;
         this.firstRead = true;
         this.isCached = false;
@@ -37,7 +38,8 @@ class Booster extends Duplex {
         if (this.firstWrite) {
             this.firstWrite = false;
             let ignoreChunk = true;
-            const uniqHash = hashCoerce.hash(chunk);
+            const firstChunkHash = hashCoerce.hash(chunk);
+            const uniqHash = hashCoerce.hash([this.commandsHash, this.environmentHash, firstChunkHash]);
             return cache.has(uniqHash)
                 .then((cached) => {
                     this.isCached = cached;

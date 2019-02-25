@@ -24,7 +24,7 @@ class Decade extends Readable {
     }
 }
 
-describe.only('Boost script #1', () => {
+describe('Boost script #1', () => {
     const commands = `
         [transit]
 
@@ -47,23 +47,43 @@ describe.only('Boost script #1', () => {
                 done();
             });
     });
-    it('with booster', (done) => {
-        let res = 0;
-        const ten = new Decade();
-        ten
-            .pipe(ezs((input, output) => {
-                output.send(input);
-            }))
-            .pipe(ezs.booster(statements))
-            .on('data', (chunk) => {
-                res += chunk;
-            })
-            .on('end', () => {
-                assert.strictEqual(res, 45);
-                done();
-            });
+    describe('first call', () => {
+        it('with booster', (done) => {
+            let res = 0;
+            const ten = new Decade();
+            ten
+                .pipe(ezs((input, output) => {
+                    output.send(input);
+                }))
+                .pipe(ezs.booster(statements))
+                .on('data', (chunk) => {
+                    res += chunk;
+                })
+                .on('end', () => {
+                    assert.strictEqual(res, 45);
+                    done();
+                });
+        });
     });
-/**/
+    describe('second call', () => {
+        it('with booster', (done) => {
+            let res = 0;
+            const ten = new Decade();
+            ten
+                .pipe(ezs((input, output) => {
+                    output.send(input);
+                }))
+                .pipe(ezs.booster(statements))
+                .on('data', (chunk) => {
+                    res += chunk;
+                })
+                .on('end', () => {
+                    assert.strictEqual(res, 45);
+                    done();
+                });
+        });
+    });
+    /**/
 });
 describe('Boost script #2', () => {
     const commands = `
@@ -106,5 +126,5 @@ describe('Boost script #2', () => {
                 done();
             });
     });
-/**/
+    /**/
 });
