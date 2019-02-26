@@ -1,19 +1,11 @@
-import os from 'os';
-import LRU from 'keyv-lru-files';
-import { Duplex, PassThrough } from 'stream';
+import { Duplex } from 'stream';
 import hasher from 'node-object-hash';
+import { DEBUG } from './constants';
 
 const hashCoerce = hasher({
     sort: false,
     coerce: true,
 });
-
-const cache = new LRU({
-    files: 100,
-    size: '1 GB',
-    check: 10,
-});
-cache.opts.dir = os.tmpdir();
 
 class Booster extends Duplex {
     constructor(ezs, commands, environment) {
@@ -23,10 +15,12 @@ class Booster extends Duplex {
         this.environmentHash = hashCoerce.hash(environment);
         this.pipeline = ezs.pipeline(commands, environment);
         this.firstWrite = true;
-        this.firstRead = true;
+        this.readCalled = false;
+        this.finalCalled = false;
         this.isCached = false;
-
-        this.cacheInput = new PassThrough(ezs.objectMode());
+        this.cacheHandle = null;
+        this.uniqHash = null;
+        this.cacheInput = ezs.createStream(ezs.objectMode());
         this.cacheOutput = this.cacheInput
             .pipe(ezs('group'))
             .pipe(ezs('pack'))
@@ -34,21 +28,27 @@ class Booster extends Duplex {
     }
 
     _write(chunk, encoding, callback) {
+        DEBUG('Booster writing');
         const { ezs } = this;
         if (this.firstWrite) {
             this.firstWrite = false;
             let ignoreChunk = true;
             const firstChunkHash = hashCoerce.hash(chunk);
-            const uniqHash = hashCoerce.hash([this.commandsHash, this.environmentHash, firstChunkHash]);
-            return cache.has(uniqHash)
-                .then((cached) => {
+            this.uniqHash = hashCoerce.hash([this.commandsHash, this.environmentHash, firstChunkHash]);
+            return ezs.getCache()
+                .has(this.uniqHash)
+                .then(cached => new Promise((resolve) => {
                     this.isCached = cached;
                     if (cached) {
-                        return cache.stream(uniqHash);
+                        return ezs.getCache()
+                            .get(this.uniqHash)
+                            .catch(err => this.failWith(err))
+                            .then(stream => resolve(stream));
                     }
-                    cache.set(uniqHash, this.cacheOutput); // TODO catch Error ...
-                    return Promise.resolve();
-                })
+                    DEBUG('Creating the cache');
+                    this.cacheHandle = ezs.getCache().set(this.uniqHash, this.cacheOutput);
+                    return resolve();
+                }))
                 .then(stream => new Promise((resolve) => {
                     if (stream) {
                         return resolve(stream
@@ -66,17 +66,16 @@ class Booster extends Duplex {
                                 feed.send(data);
                             }))
                             .pipe(ezs('transit'))
-                            .on('error', err => this.emit(err)));
+                            .on('error', err => this.emit('error', err)));
                     }
                     ignoreChunk = false;
                     return resolve(this.pipeline
                         .pipe(ezs((data, feed) => {
                             if (data !== null) {
-                                this.cacheInput.write(data);
+                                this.cacheInput.write(data, () => feed.send(data));
                             } else {
-                                this.cacheInput.end();
+                                this.cacheInput.end(() => feed.send(data));
                             }
-                            feed.send(data);
                         }))
                         .pipe(ezs((data, feed) => {
                             if (data !== null) {
@@ -91,14 +90,15 @@ class Booster extends Duplex {
                 }))
                 .then((output) => {
                     this.output = output;
-                    if (this.firstRead) {
+                    if (!this.readCalled) {
                         this.output.pause();
                     }
                     if (!ignoreChunk) {
                         this.pipeline.write(chunk, encoding);
                     }
                     return callback();
-                });
+                })
+                .catch(err => this.failWith(err));
         }
         if (this.isCached) {
             return callback();
@@ -107,8 +107,9 @@ class Booster extends Duplex {
     }
 
     _read() {
-        if (this.firstRead) {
-            this.firstRead = false;
+        DEBUG('Booster reading');
+        if (!this.readCalled) {
+            this.readCalled = true;
         }
         if (this.output) {
             this.output.resume();
@@ -116,7 +117,26 @@ class Booster extends Duplex {
     }
 
     _final(callback) {
-        this.pipeline.end(callback);
+        DEBUG('Booster ending');
+        if (!this.finalCalled) {
+            this.finalCalled = true;
+        }
+        this.pipeline.end(() => {
+            if (this.cacheHandle) {
+                return this.cacheHandle
+                    .catch(err => this.failWith(err))
+                    .then(() => callback());
+            }
+            return callback();
+        });
+    }
+
+    failWith(err) {
+        // https://github.com/nodejs/node/issues/9242
+        DEBUG('Booster fail with', err);
+        if (!this.finalCalled) {
+            this.emit('error', err);
+        }
     }
 }
 
