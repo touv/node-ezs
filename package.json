@@ -11,6 +11,7 @@
     },
     "scripts": {
         "test": "mocha --require babel-register --exit",
+        "coverage": "nyc --reporter=text mocha --require babel-register --exit",
         "doc": "documentation readme package.json src/* --section=Statements",
         "lint": "eslint --ext=.js ./test/*.js ./src/*.js ./src/statements/*.js",
         "build": "babel src --out-dir lib",
@@ -44,7 +45,8 @@
         "eslint-plugin-import": "~2.16.0",
         "from": "~0.1.7",
         "mocha": "~6.0.2",
-        "node-fetch": "~2.3.0"
+        "node-fetch": "~2.3.0",
+        "nyc": "~13.3.0"
     },
     "dependencies": {
         "app-module-path": "~2.2.0",
