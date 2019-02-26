@@ -1,6 +1,5 @@
 import { Duplex } from 'stream';
 import hasher from 'node-object-hash';
-import { DEBUG } from './constants';
 
 const hashCoerce = hasher({
     sort: false,
@@ -28,7 +27,6 @@ class Booster extends Duplex {
     }
 
     _write(chunk, encoding, callback) {
-        DEBUG('Booster writing');
         const { ezs } = this;
         if (this.firstWrite) {
             this.firstWrite = false;
@@ -45,7 +43,6 @@ class Booster extends Duplex {
                             .catch(err => this.failWith(err))
                             .then(stream => resolve(stream));
                     }
-                    DEBUG('Creating the cache');
                     this.cacheHandle = ezs.getCache().set(this.uniqHash, this.cacheOutput);
                     return resolve();
                 }))
@@ -107,7 +104,6 @@ class Booster extends Duplex {
     }
 
     _read() {
-        DEBUG('Booster reading');
         if (!this.readCalled) {
             this.readCalled = true;
         }
@@ -117,7 +113,6 @@ class Booster extends Duplex {
     }
 
     _final(callback) {
-        DEBUG('Booster ending');
         if (!this.finalCalled) {
             this.finalCalled = true;
         }
@@ -133,7 +128,6 @@ class Booster extends Duplex {
 
     failWith(err) {
         // https://github.com/nodejs/node/issues/9242
-        DEBUG('Booster fail with', err);
         if (!this.finalCalled) {
             this.emit('error', err);
         }
