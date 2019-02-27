@@ -1,4 +1,4 @@
-import { Duplex } from 'stream';
+import { Duplex, PassThrough } from 'stream';
 import hasher from 'node-object-hash';
 
 const hashCoerce = hasher({
@@ -19,7 +19,7 @@ class Booster extends Duplex {
         this.isCached = false;
         this.cacheHandle = null;
         this.uniqHash = null;
-        this.cacheInput = ezs.createStream(ezs.objectMode());
+        this.cacheInput = new PassThrough(ezs.objectMode());
         this.cacheOutput = this.cacheInput
             .pipe(ezs('group'))
             .pipe(ezs('pack'))
