@@ -66,6 +66,30 @@ Each statement can be executed in different modes :
 
 The basic way to use modes, it's with a ezs script or with ezs.dispatch function.
 
+# CLI
+
+The command line interface is used to create run pipelines described in .ini files.
+
+It is also possible to launch a web server allowing remote execution of .ini files
+
+```
+$ ezs -h                                                                                                                                                                   ven. 15 mars 2019 16:15:20 CET
+Usage: ezs [options] [<file>|<directory>] [<file2> <file3> ...]
+
+Options:
+  --help         Affiche de l'aide                                     [booléen]
+  --version      Affiche le numéro de version                          [booléen]
+  --verbose, -v  Enable debug mode with DEBUG=ezs      [booléen] [défaut: false]
+  --daemon, -d   Launch daemon on a directory containing commands script
+                                                           [chaine de caractère]
+  --server, -s   Server to dispach commands                [chaine de caractère]
+  --env, -e      Execute commands with environement variables as input
+                                                       [booléen] [défaut: false]
+
+for more information, find our manual at https://github.com/touv/node-ezs
+
+```
+
 # API Documentation
 
 ## ezs(statement : Mixed, [params : Object]) : Stream
@@ -100,33 +124,9 @@ To set globaly a statement parameter.
 
 Launch a serie of statements.
 
-## ezs.dispatch = (commands, options : Object)
+## ezs.booster = (commands, options : Object)
 
-Launch, through a server, a serie of statements.
-
-## ezs.metaString = (commands: String, options : Object)
-
-Parse an .ini string to extract global keys and values.
-
-## ezs.metaFile = (filename : String, options : Object)
-
-Parse an .ini file to extract global keys and values.
-
-## ezs.parseString = (commands : String)
-
-Parse an .ini string and return Object contains a serie of statements
-
-## ezs.fromString = (commands, options : Object)
-
-Parse an .ini string and launch a serie of statements
-
-## ezs.parseFile = (filename : String)
-
-Parse an .ini file and return Object contains a serie of statements
-
-## ezs.fromFile(filename : String, options : Object)
-
-Parse an .ini file and launch a serie of statements
+Launch a serie of statements (with cache).
 
 ## ezs.catch(func : Function)
 
@@ -136,103 +136,34 @@ catch Error in NodeJS pipeline
 
 get chunk of in NodeJS pipeline and send Buffer of the chunk
 
-## ezs.createCache = (options: Object)
 
-To cache the result of the pipeline.
-Options:
+## to generate commands pipeline
 
--   `max` **Number**  max items in the cache (optional, default `500`)
--   `maxAge` Number max age of items in the cache (optional, default `360000`)
--   `objectMode` Boolean cache for object (or Buffer) (optional, default `false`)
+### ezs.metaString = (commands: String, options : Object)
 
-Example:
+Parse an .ini string to extract global keys and values.
 
-```javascript
-    const cache = ezs.createCache({ objectMode: false });
+### ezs.metaFile = (filename : String, options : Object)
 
-    const cacheID = 'XXXXXX';
-    const cached = cache1.get(cacheID);
-    if (cached) {
-        cached
-            .pipe(process.stdout)
-    } else {
-        process.stdin
-            .pipe(cache1.set(cacheID))
-            .pipe(process.stdout)
-    }
-```
+Parse an .ini file to extract global keys and values.
 
-## ezs.createStream = (options : Object)
+### ezs.parseString = (commands : String)
 
-To create a Passthru stream.
+Parse an .ini string and return Object contains a serie of statements
 
-Example:
+### ezs.fromString = (commands, options : Object)
 
-```javascript
-    const input = ezs.createStream();
-    input.pipe(process.stdout);
-    input.write('Hello');
-    input.end();
-```
+Parse an .ini string and launch a serie of statements
 
-## ezs.save = (path : String, options : Object)
+### ezs.parseFile = (filename : String)
 
-Save a Object streams to the filesystem.
+Parse an .ini file and return Object contains a serie of statements
 
-Example:
+### ezs.fromFile(filename : String, options : Object)
 
-```javascript
-    const input = ezs.createStream(ezs.objectMode());
-    input.pipe(ezs.save('/tmp/db'));
-    input.write({ text: 'Hello' });
-    input.write({ text: 'World' });
-    input.end();
-```
+Parse an .ini file and launch a serie of statements
 
-## ezs.load = (path : String, options : Object)
 
-Load a Object streams from the filesystem. (saved by ezs.save function)
-
-Example:
-
-```javascript
-    const input = ezs.load('/tmp/db');
-        .pipe(process.stdout)
-```
-
-## ezs.compress = (options : Object)
-
-Compress a binary stream.
-
-Example:
-
-```javascript
-    process.stdin
-        .pipe(ezs.compress())
-        .pipe(process.stdout)
-    ;
-```
-
-## ezs.uncompress = (options : Object)
-
-Uncompress a binary stream. (compressed by ezs.compress function)
-
-Example:
-
-```javascript
-    process.stdin
-        .pipe(ezs.uncompress())
-        .pipe(process.stdout)
-    ;
-```
-
-## ezs.createServer = (port : Number)
-
-Launch a server for ezs.dispatch
-
-## ezs.createCluster = (port : Number)
-
-Launch a cluster for ezs.dispatch
 
 # Statements
 
