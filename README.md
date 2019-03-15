@@ -246,30 +246,34 @@ Launch a cluster for ezs.dispatch
     -   [Parameters](#parameters-1)
 -   [debug](#debug)
     -   [Parameters](#parameters-2)
--   [dump](#dump)
+-   [delegate](#delegate)
     -   [Parameters](#parameters-3)
--   [env](#env)
+-   [dispatch](#dispatch)
     -   [Parameters](#parameters-4)
--   [extract](#extract)
+-   [dump](#dump)
     -   [Parameters](#parameters-5)
--   [group](#group)
+-   [env](#env)
     -   [Parameters](#parameters-6)
--   [keep](#keep)
+-   [extract](#extract)
     -   [Parameters](#parameters-7)
--   [pack](#pack)
+-   [group](#group)
     -   [Parameters](#parameters-8)
--   [replace](#replace)
+-   [keep](#keep)
     -   [Parameters](#parameters-9)
--   [shift](#shift)
+-   [eol](#eol)
+-   [eol](#eol-1)
+-   [replace](#replace)
     -   [Parameters](#parameters-10)
--   [shuffle](#shuffle)
+-   [shift](#shift)
     -   [Parameters](#parameters-11)
--   [transit](#transit)
+-   [shuffle](#shuffle)
     -   [Parameters](#parameters-12)
--   [ungroup](#ungroup)
+-   [tracer](#tracer)
     -   [Parameters](#parameters-13)
--   [unpack](#unpack)
+-   [transit](#transit)
     -   [Parameters](#parameters-14)
+-   [ungroup](#ungroup)
+    -   [Parameters](#parameters-15)
 
 ## assign
 
@@ -309,6 +313,36 @@ Take `Object` , print it and throw the same object
 -   `level` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** console level : log or error (optional, default `log`)
 -   `text` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** text before the dump (optional, default `valueOf`)
 -   `path` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** path of field to print
+
+Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** 
+
+## delegate
+
+Takes an `Object` delegate processing to an external pipeline
+
+### Parameters
+
+-   `data`  
+-   `feed`  
+-   `file` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** the external pipeline is descrbied in a file
+-   `script` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** the external pipeline is descrbied in a sting of characters
+-   `commands` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** the external pipeline is descrbied in object
+-   `method` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** set method to `booster` to speed up the external pipeline. (optional, default `pipeline`)
+
+Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** 
+
+## dispatch
+
+Takes an `Object` dispatch processing to an external pipeline in one or more servers
+
+### Parameters
+
+-   `data`  
+-   `feed`  
+-   `server` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** servers to dispatch data
+-   `file` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** the external pipeline is descrbied in a file
+-   `script` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** the external pipeline is descrbied in a sting of characters
+-   `commands` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)?** the external pipeline is descrbied in object
 
 Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** 
 
@@ -376,14 +410,19 @@ spefici fields
 
 Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** 
 
-## pack
+## eol
 
 Take all `Object`, throw encoded `String`
 
-### Parameters
+Type: [string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)
 
--   `data`  
--   `feed`  
+Returns **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** 
+
+## eol
+
+Take `String` and throw `Object` builded by JSON.parse on each line
+
+Type: [string](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)
 
 Returns **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** 
 
@@ -423,6 +462,20 @@ Take `Object`, shuffle data of the whole object or only some fields specified by
 
 Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** 
 
+## tracer
+
+Take `Object`, print a character and throw the same object
+
+### Parameters
+
+-   `data`  
+-   `feed`  
+-   `print` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** character to print at each object (optional, default `.`)
+-   `last` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** character to print at last call (optional, default `.`)
+-   `first` **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** character to print at first call (optional, default `.`)
+
+Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/Object)** 
+
 ## transit
 
 Take `Object` and throw the same object
@@ -437,17 +490,6 @@ Returns **[Object](https://developer.mozilla.org/docs/Web/JavaScript/Reference/G
 ## ungroup
 
 Take all `chunk`, and throw each item of chunks
-
-### Parameters
-
--   `data`  
--   `feed`  
-
-Returns **[String](https://developer.mozilla.org/docs/Web/JavaScript/Reference/Global_Objects/String)** 
-
-## unpack
-
-Take `String` and throw `Object` builded by JSON.parse on each line
 
 ### Parameters
 
