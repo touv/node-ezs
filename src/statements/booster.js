@@ -82,7 +82,6 @@ export default function booster(data, feed) {
                         .pipe(ezs.catch(e => feed.write(e)))
                         .on('error', e => feed.write(e))
                         .on('data', d => feed.write(d))
-                        .pipe(ezs('debug'))
                         .pipe(ezs('group'))
                         .pipe(ezs('pack'))
                         .pipe(ezs.compress(ezs.encodingMode()));
