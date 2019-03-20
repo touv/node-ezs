@@ -669,7 +669,7 @@ describe('Build a pipeline', () => {
             });
     });
 
-    it('with single pipeline in the pipeline', (done) => {
+    it('with singleton in the pipeline (object)', (done) => {
         let res = 0;
         const expr1 = new Expression('self()');
         const expr2 = new Expression('compute("a * b")');
@@ -696,6 +696,27 @@ describe('Build a pipeline', () => {
                 done();
             });
     });
+
+    it('with singleton in the pipeline (do nothing)', (done) => {
+        let res = 0;
+        from([
+            1,
+            2,
+        ])
+            .pipe(ezs('singleton', {
+                statement: 'replace',
+                path: 'a',
+                value: 1000,
+            }))
+            .on('data', (chunk) => {
+                res += chunk;
+            })
+            .on('end', () => {
+                assert.strictEqual(res, 3);
+                done();
+            });
+    });
+
 
     it('with single statement in the script', (done) => {
         let res = 0;

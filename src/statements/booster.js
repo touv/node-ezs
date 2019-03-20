@@ -19,7 +19,7 @@ const computeHash = (commands, environment, chunk) => {
     const hashs = [commandsHash, environmentHash, firstChunkHash];
     DEBUG('Compute cache hash with', hashs.map(h => h.slice(0, 5).concat('...')));
     return hashCoerce.hash(hashs);
-}
+};
 
 /**
  * Takes an `Object` delegate processing to an external pipeline
@@ -112,7 +112,7 @@ export default function booster(data, feed) {
         });
         return 1;
     }
-    this.whenReady
+    return this.whenReady
         .then(() => {
             if (this.whenFinish) {
                 if (this.isLast()) {

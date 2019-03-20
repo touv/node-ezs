@@ -12,24 +12,14 @@ export default function singleton(data, feed) {
         const paramaters = this.getParams();
         const savedData = Object.assign({}, data);
         const input = new PassThrough({ objectMode: true });
-        let result;
+        let result = {};
 
         input
             .pipe(ezs(statement, paramaters, environment))
-            .pipe(ezs.catch(e => feed.write(e)))
-            .on('error', e => feed.write(e))
+            .pipe(ezs.catch(e => e))
+            .on('error', e => feed.stop(e))
             .on('data', (chunk) => {
-                if (typeof chunk === 'object') {
-                    if (!result) {
-                        result = {};
-                    }
-                    result = Object.assign(result, chunk);
-                } else {
-                    if (!result) {
-                        result = '';
-                    }
-                    result += chunk;
-                }
+                result = Object.assign(result, chunk);
             })
             .on('end', () => {
                 this.addedResult = addedDiff(savedData, result);
@@ -38,6 +28,5 @@ export default function singleton(data, feed) {
         input.write(data);
         return input.end();
     }
-
     return feed.send(Object.assign(data, this.addedResult));
 }
