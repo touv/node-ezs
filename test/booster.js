@@ -238,7 +238,6 @@ describe('Booster', () => {
                 // force error
                 fs.writeFileSync(`/tmp/ezs/${cid}`, Buffer.from('H4sIAJjfd1wAA4vmAgB+f0P4AgAAAA==', 'base64'));
 
-                let errorCatched = false;
                 const ten = new Decade();
                 ten
                     .pipe(ezs((input, output) => {
@@ -247,12 +246,10 @@ describe('Booster', () => {
                     }))
                     .pipe(ezs('booster', { script: commands }))
                     .pipe(ezs('transit'))
+                    .pipe(ezs.catch(e => e))
                     .on('error', (error) => {
                         assert(error instanceof Error);
-                        if (errorCatched) {
-                            done();
-                        }
-                        errorCatched = true;
+                        done();
                     });
             });
         });
@@ -309,6 +306,8 @@ describe('Booster', () => {
                         output.send(input === 2 ? 1 : input);
                     }))
                     .pipe(ezs('booster', { script: commands }))
+                    .pipe(ezs('transit'))
+                    .pipe(ezs.catch(e => e))
                     .on('error', assert.ifError)
                     .on('data', (chunk) => {
                         res += chunk;

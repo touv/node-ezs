@@ -60,13 +60,16 @@ export default function booster(data, feed) {
                             .then((stream) => {
                                 stream
                                     .pipe(ezs.uncompress(ezs.encodingMode()))
-                                    .on('error', () => {
-                                        ezs.getCache().del(uniqHash).catch(e => console.error);
+                                    .on('error', (e1) => {
+                                        DEBUG('Error while reading cache with hash', uniqHash, e1);
+                                        ezs.getCache().del(uniqHash).catch((e2) => {
+                                            DEBUG('Error while deleting cache with hash', uniqHash, e2);
+                                        });
                                         feed.stop();
                                     })
                                     .pipe(ezs('unpack'))
                                     .pipe(ezs('ungroup'))
-                                    .pipe(ezs.catch(e => feed.stop(e)))
+                                    .pipe(ezs.catch(e => e))
                                     .on('error', e => feed.stop(e))
                                     .on('data', d => feed.write(d))
                                     .on('end', () => {
@@ -79,7 +82,7 @@ export default function booster(data, feed) {
                     this.emit('cache:created', uniqHash);
                     this.input = new PassThrough(ezs.objectMode());
                     const output = ezs.createPipeline(this.input, streams)
-                        .pipe(ezs.catch(e => feed.write(e)))
+                        .pipe(ezs.catch(e => e))
                         .on('error', e => feed.write(e))
                         .on('data', d => feed.write(d))
                         .pipe(ezs('group'))
@@ -96,10 +99,11 @@ export default function booster(data, feed) {
                         .then(() => {
                             DEBUG('Cache has created with hash', uniqHash);
                         })
-                        .catch((e) => {
-                            console.log(e);
-                            DEBUG('Cache has deleted with hash', uniqHash);
-                            ezs.getCache().del(uniqHash).catch(e => console.error);
+                        .catch((e1) => {
+                            DEBUG('Error while creating cache with hash', uniqHash, e1);
+                            ezs.getCache().del(uniqHash).catch((e2) => {
+                                DEBUG('Error while deleting cache with hash', uniqHash, e2);
+                            });
                         });
                     DEBUG(`Delegate first chunk #${this.getIndex()} containing ${Object.keys(data).length || 0} keys`);
                     return writeTo(this.input, data, () => {
