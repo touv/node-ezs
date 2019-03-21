@@ -115,14 +115,11 @@ export default function cli(errlog) {
         })
         .map(script => new Commands(ezs.parseString(script)))
         .reduce(runScript(argv.server), input)
+        .pipe(ezs.catch(e => e))
         .on('error', (e) => {
             errlog(e.message.split('\n').shift());
             process.exit(2);
         })
-        .pipe(ezs.catch((e) => {
-            errlog(e.message.split('\n').shift());
-            process.exit(2);
-        }))
         .pipe(ezs.toBuffer());
     output.on('end', () => {
         process.exit(0);
