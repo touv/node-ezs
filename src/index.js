@@ -5,6 +5,7 @@ import Engine from './engine';
 import Script from './script';
 import File from './file';
 import Output from './output';
+import Commands from './commands';
 import Catcher from './catcher';
 import Statements from './statements';
 import Parameter from './parameter';
@@ -51,7 +52,8 @@ ezs.toBuffer = options => new Output(options);
 ezs.use = plugin => Statement.set(ezs, plugin);
 ezs.addPath = p => ezsPath.push(p);
 ezs.getPath = () => ezsPath;
-ezs.command = (stream, command, environment) => stream.pipe(ezs.createCommand(command, environment));
+ezs.loadScript = file => File(ezs, file);
+ezs.compileScript = script => new Commands(ezs.parseString(script));
 ezs.createCommand = (command, environment) => {
     const mode = command.mode || M_NORMAL;
     if (!command.name) {
@@ -80,6 +82,15 @@ ezs.compileCommands = (commands, environment) => {
         return new PassThrough(ezs.objectMode());
     }
     return streams;
+};
+ezs.writeTo = (stream, data, callback) => {
+    const check = stream.write(data);
+    if (!check) {
+        stream.once('drain', callback);
+    } else {
+        process.nextTick(callback);
+    }
+    return check;
 };
 ezs.createPipeline = (input, streams) => streams.reduce((amont, aval) => amont.pipe(aval), input);
 ezs.compress = options => compressStream(ezs, options);

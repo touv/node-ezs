@@ -1,4 +1,4 @@
-import { DEBUG } from '../constants';
+import debug from 'debug';
 import Parameter from '../parameter';
 import { isFile } from '../file';
 
@@ -12,12 +12,12 @@ const knownPipeline = ezs => (request, response) => {
     }
     const { headers } = request;
     response.setHeader('Content-Encoding', headers['content-encoding'] || 'identity');
-    DEBUG(`PID ${process.pid} will execute ${file} commands with ${Object.keys(query).length || 0} global parameters`);
+    debug('ezs')(`PID ${process.pid} will execute ${file} commands with ${Object.keys(query).length || 0} global parameters`);
     request
         .pipe(ezs.uncompress(headers))
         .pipe(ezs('delegate', { file }, query))
         .pipe(ezs.catch((error) => {
-            DEBUG('Server has caught an error', error);
+            debug('ezs')('Server has caught an error', error);
             if (!response.headersSent) {
                 response.writeHead(500, { 'X-Error': Parameter.encode(error.toString()) });
                 response.end();

@@ -1,11 +1,6 @@
 import { PassThrough } from 'stream';
 import hasher from 'node-object-hash';
-import File from '../file';
-import Commands from '../commands';
-import { DEBUG } from '../constants';
-import {
-    writeTo,
-} from '../client';
+import debug from 'debug';
 
 const hashCoerce = hasher({
     sort: false,
@@ -17,7 +12,7 @@ const computeHash = (commands, environment, chunk) => {
     const environmentHash = hashCoerce.hash(environment);
     const firstChunkHash = hashCoerce.hash(chunk);
     const hashs = [commandsHash, environmentHash, firstChunkHash];
-    DEBUG('Compute cache hash with', hashs.map(h => h.slice(0, 5).concat('...')));
+    debug('ezs')('Compute cache hash with', hashs.map(h => h.slice(0, 5).concat('...')));
     return hashCoerce.hash(hashs);
 };
 
@@ -33,8 +28,9 @@ export default function booster(data, feed) {
     const { ezs } = this;
     if (this.isFirst()) {
         const file = this.getParam('file');
-        const script = this.getParam('script', File(ezs, file));
-        const cmds = new Commands(ezs.parseString(script));
+        const fileContent = ezs.loadScript(file);
+        const script = this.getParam('script', fileContent);
+        const cmds = ezs.compileScript(script);
         const commands = this.getParam('commands', cmds.get());
         const environment = this.getEnv();
 
@@ -47,12 +43,19 @@ export default function booster(data, feed) {
 
         this.whenReady = new Promise((getup) => {
             const uniqHash = computeHash(commands, environment, data);
+            const resetCacheOnError = (error, action) => {
+                debug('ezs')(`Error while ${action} cache with hash`, uniqHash, error);
+                ezs.getCache().del(uniqHash).catch((error1) => {
+                    debug('ezs')('Error while deleting cache with hash', uniqHash, error1);
+                });
+            };
+
             ezs.getCache()
                 .has(uniqHash)
                 .then(cached => new Promise((resolve) => {
                     this.cached = cached;
                     if (cached) {
-                        DEBUG('Using cache with hash', uniqHash);
+                        debug('ezs')('Using cache with hash', uniqHash);
                         this.emit('cache:connected', uniqHash);
                         return ezs.getCache()
                             .get(uniqHash)
@@ -61,10 +64,7 @@ export default function booster(data, feed) {
                                 stream
                                     .pipe(ezs.uncompress(ezs.encodingMode()))
                                     .on('error', (e1) => {
-                                        DEBUG('Error while reading cache with hash', uniqHash, e1);
-                                        ezs.getCache().del(uniqHash).catch((e2) => {
-                                            DEBUG('Error while deleting cache with hash', uniqHash, e2);
-                                        });
+                                        resetCacheOnError(e1, 'reading');
                                         feed.stop();
                                     })
                                     .pipe(ezs('unpack'))
@@ -73,12 +73,12 @@ export default function booster(data, feed) {
                                     .on('error', e => feed.stop(e))
                                     .on('data', d => feed.write(d))
                                     .on('end', () => {
-                                        DEBUG('Cache with hash', uniqHash, 'was readed');
+                                        debug('ezs')('Cache with hash', uniqHash, 'was readed');
                                         feed.close();
                                     });
                             });
                     }
-                    DEBUG('Creating cache with hash', uniqHash);
+                    debug('ezs')('Creating cache with hash', uniqHash);
                     this.emit('cache:created', uniqHash);
                     this.input = new PassThrough(ezs.objectMode());
                     const output = ezs.createPipeline(this.input, streams)
@@ -87,26 +87,27 @@ export default function booster(data, feed) {
                         .on('data', d => feed.write(d))
                         .pipe(ezs('group'))
                         .pipe(ezs('pack'))
-                        .pipe(ezs.compress(ezs.encodingMode()));
+                        .pipe(ezs.catch(e => e))
+                        .on('error', e => resetCacheOnError(e, 'before saving'))
+                        .pipe(ezs.compress(ezs.encodingMode()))
+                        .on('error', e => resetCacheOnError(e, 'after saving'));
 
                     this.whenFinish = new Promise((done) => {
-                        DEBUG('Cache with hash', uniqHash, 'was writed');
+                        debug('ezs')('Cache with hash', uniqHash, 'was writed');
                         output.on('end', done);
                     });
 
                     ezs.getCache()
                         .set(uniqHash, output)
                         .then(() => {
-                            DEBUG('Cache has created with hash', uniqHash);
+                            debug('ezs')('Cache has created with hash', uniqHash);
                         })
-                        .catch((e1) => {
-                            DEBUG('Error while creating cache with hash', uniqHash, e1);
-                            ezs.getCache().del(uniqHash).catch((e2) => {
-                                DEBUG('Error while deleting cache with hash', uniqHash, e2);
-                            });
+                        .catch((e) => {
+                            resetCacheOnError(e, 'creating');
+                            feed.stop();
                         });
-                    DEBUG(`Delegate first chunk #${this.getIndex()} containing ${Object.keys(data).length || 0} keys`);
-                    return writeTo(this.input, data, () => {
+                    debug('ezs')(`Delegate first chunk #${this.getIndex()} containing ${Object.keys(data).length || 0} keys`);
+                    return ezs.writeTo(this.input, data, () => {
                         feed.end();
                         getup();
                         return resolve();
@@ -124,8 +125,8 @@ export default function booster(data, feed) {
                         .catch(e => feed.stop(e));
                     return this.input.end();
                 }
-                DEBUG(`Delegate chunk #${this.getIndex()} containing ${Object.keys(data).length || 0} keys`);
-                return writeTo(this.input, data, () => feed.end());
+                debug('ezs')(`Delegate chunk #${this.getIndex()} containing ${Object.keys(data).length || 0} keys`);
+                return ezs.writeTo(this.input, data, () => feed.end());
             }
             return 1;
         })
