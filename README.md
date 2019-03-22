@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/touv/node-ezs.png?branch=master)](https://travis-ci.org/touv/node-ezs)
 [![npm version](https://img.shields.io/npm/v/ezs.svg)](https://npm.im/ezs)
 [![license](https://img.shields.io/npm/l/ezs.svg)](https://npm.im/ezs)
-[![Coverage Status](https://coveralls.io/repos/github/touv/node-ezs/badge.svg?branch=latest)](https://coveralls.io/github/touv/node-ezs?branch=latest)
+[![Coverage Status](https://coveralls.io/repos/github/touv/node-ezs/badge.svg?branch=master)](https://coveralls.io/github/touv/node-ezs?branch=master)
 
 It's just a wrapper to build Stream transformers with functional style. It's like the koa / expressjs middlewares !
 
