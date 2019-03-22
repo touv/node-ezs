@@ -29,12 +29,12 @@ export const parseAddress = (commands, environment) => (srvr) => {
     commands
         .filter(Boolean)
         .forEach((command, index) => {
-            serverOptions.headers[`X-Command-${index}`] = Parameter.encode(JSON.stringify(command));
+            serverOptions.headers[`X-Command-${index}`] = Parameter.pack(command);
         });
     Object.keys(environment)
         .filter(keyEnv => environment[keyEnv])
         .forEach((keyEnv, index) => {
-            serverOptions.headers[`X-Environment-${index}`] = Parameter.encode(JSON.stringify({ k: keyEnv, v: environment[keyEnv]}));
+            serverOptions.headers[`X-Environment-${index}`] = Parameter.pack({ k: keyEnv, v: environment[keyEnv] });
         });
     if (hostWithPort) {
         return {

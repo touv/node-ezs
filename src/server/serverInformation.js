@@ -1,9 +1,9 @@
 import dir from 'node-dir';
+import debug from 'debug';
 import Parameter from '../parameter';
 import settings from '../settings';
-import debug from 'debug';
 import {
-     VERSION, STARTED_AT,
+    VERSION, STARTED_AT,
 } from '../constants';
 
 const getInformations = dirPath => new Promise((resolve, reject) => {
