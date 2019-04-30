@@ -1,4 +1,4 @@
-import merge from 'merge2';
+import union from 'sorted-union-stream';
 import debug from 'debug';
 import {
     inspectServers,
@@ -31,15 +31,26 @@ export default function dispatch(data, feed) {
         }
         const handles = servers.map(connectServer(ezs));
         this.ins = handles.map(h => h[0]);
-        this.outs = handles.map(h => h[1]);
+        this.outs = handles.map(h => h[1].on('error', e => feed.write(e)));
+
+        let funnel;
+        if (this.outs.length > 1) {
+            funnel = this.outs.reduce((prev, cur) => union(prev, cur), this.outs[0]);
+        } else {
+            funnel = this.outs;
+        }
+
+        /*
         const funnel = merge(this.outs, ezs.objectMode())
             .on('queueDrain', () => {
                 funnel.destroy();
             })
+            */
+        funnel
             .on('error', e => feed.write(e))
             .on('data', d => feed.write(d));
         this.whenFinish = new Promise((resolve) => {
-            funnel.on('close', resolve);
+            funnel.on('end', resolve);
         });
     }
     if (this.isLast()) {
