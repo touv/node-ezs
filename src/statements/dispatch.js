@@ -31,7 +31,9 @@ export default function dispatch(data, feed) {
         }
         const handles = servers.map(connectServer(ezs));
         this.ins = handles.map(h => h[0]);
-        this.outs = handles.map(h => h[1].on('error', e => feed.write(e)));
+        this.outs = handles.map(h => h[1]
+            .pipe(ezs.catch(e => feed.write(e)))
+            .on('error', e => feed.write(e)));
 
         let funnel;
         if (this.outs.length > 1) {
