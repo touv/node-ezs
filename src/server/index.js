@@ -11,7 +11,10 @@ import notFound from './notFound';
 import Parameter from '../parameter';
 import settings from '../settings';
 
-const isPipeline = filename => (filename.match(regex()).shift() !== undefined);
+const isPipeline = (filename) => {
+    const f = filename.match(regex());
+    return (f && f.shift() !== undefined);
+};
 
 function createMidddleware(ezs, method, pathname) {
     if (method === 'POST' && pathname === '/') {
