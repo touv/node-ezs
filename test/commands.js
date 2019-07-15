@@ -29,6 +29,29 @@ describe('analsye commands', () => {
         assert.equal(commandsAnalysed[1].cmds.length, 2);
         done();
     });
+    it('with simple pipeline', (done) => {
+        const commands = `
+
+            [package:increment]
+            step = 1
+
+            [package:increment?single]
+            step = 2
+
+            [assign?detachable]
+            step = 3
+
+            [assign]
+            step = 3
+
+        `;
+        const commandsParsed = ezs.parseString(commands);
+        assert.equal(commandsParsed[0].use, 'package');
+        assert.equal(commandsParsed[1].use, 'package');
+        assert.equal(commandsParsed[2].use, '');
+        assert.equal(commandsParsed[3].use, '');
+        done();
+    });
 
     /**/
 });
