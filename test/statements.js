@@ -456,4 +456,44 @@ describe('statements', () => {
                 done();
             });
     });
+    it('validate#1', (done) => {
+        const res = [];
+        from([
+            { a: 1 },
+            { a: 2 },
+            { a: 3 },
+        ])
+            .pipe(ezs('validate', { path: 'a', rule: 'required|integer' }))
+            .pipe(ezs.catch(e => e))
+            .on('error', (e) => {
+                assert.ifError(e);
+            })
+            .on('data', (chunk) => {
+                res.push(chunk);
+            })
+            .on('end', () => {
+                assert.equal(res.length, 3);
+                done();
+            });
+    });
+    it('validate#2', (done) => {
+        const res = [];
+        from([
+            { a: 1 },
+            { a: "X" },
+            { a: 3 },
+        ])
+            .pipe(ezs('validate', { path: 'a', rule: 'required|integer' }))
+            .pipe(ezs.catch(e => e))
+            .on('error', (e) => {
+                assert.ifError(e);
+            })
+            .on('data', (chunk) => {
+                res.push(chunk);
+            })
+            .on('end', () => {
+                assert.equal(res.length, 3);
+                done();
+            });
+    });
 });
