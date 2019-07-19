@@ -46,7 +46,7 @@
         "eslint-config-airbnb-base": "~13.1.0",
         "eslint-plugin-import": "~2.16.0",
         "from": "~0.1.7",
-        "mocha": "~6.0.2",
+        "mocha": "~6.1.4",
         "node-fetch": "~2.3.0",
         "nyc": "~13.3.0"
     },
@@ -60,7 +60,7 @@
         "filename-regex": "~2.0.1",
         "filtrex": "~0.5.4",
         "http-shutdown": "~1.2.0",
-        "lodash": "~4.17.11",
+        "lodash": "~4.17.14",
         "merge2": "~1.2.3",
         "mkdirp": "~0.5.1",
         "node-dir": "~0.1.17",

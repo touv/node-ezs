@@ -52,6 +52,32 @@ describe('analsye commands', () => {
         assert.equal(commandsParsed[3].use, '');
         done();
     });
-
     /**/
+});
+
+describe('create command', () => {
+    const environment = {};
+    it('with invalid property #1', () => {
+        const command = {
+            name: '',
+            use: '',
+            mode: '',
+        };
+        assert.throws(() => (ezs.createCommand(command, environment)));
+    });
+    it('with invalid property #2', () => {
+        const command = {
+            name: 'toto',
+            use: '',
+            mode: 'toto',
+        };
+        assert.throws(() => (ezs.createCommand(command, environment)));
+    });
+    it('with invalid property #3', () => {
+        const command = {
+            name: 'toto',
+            use: 'titi',
+        };
+        assert.throws(() => (ezs.createCommand(command, environment)));
+    });
 });
