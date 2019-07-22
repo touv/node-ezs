@@ -1,3 +1,4 @@
+import util from 'util';
 import _ from 'lodash';
 import Validator from 'validatorjs';
 
@@ -9,7 +10,7 @@ import Validator from 'validatorjs';
  * @see laravel validtor rules
  * @returns {Object}
  */
-export default function replace(data, feed) {
+export default function validate(data, feed) {
     if (this.isLast()) {
         return feed.close();
     }
@@ -18,10 +19,11 @@ export default function replace(data, feed) {
     const rule = this.getParam('rule', []);
     const rules = Array.isArray(rule) ? rule : [rule];
     const ruless = _.take(rules, paths.length);
-    const assets = _.zipObject(paths, ruless);
+    const pathss = _.take(paths, rules.length);
+    const assets = _.zipObject(pathss, ruless);
     const validation = new Validator(data, assets);
     if (validation.fails()) {
-        return feed.send(new Error(validation.errors.all()));
+        return feed.send(new Error(util.inspect(validation.errors.all())));
     }
     return feed.send(data);
 }
